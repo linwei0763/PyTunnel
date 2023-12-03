@@ -188,8 +188,6 @@ if __name__ == '__main__':
     if not os.path.exists(path_o):
         os.makedirs(path_o)
         
-    
-
     files = os.listdir(path_i)
     
     for file in files:
