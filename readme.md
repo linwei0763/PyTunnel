@@ -13,6 +13,6 @@ pip install open3d
 
 # implement
 
-conda activate seg2lining
+conda activate pytunnel
 
 cd PyTunnel
