@@ -1,0 +1,173 @@
+import numpy as np
+import open3d as o3d
+import os
+import pandas as pd
+from scipy import optimize
+
+
+def compute_normal(xyz):
+    
+    pcd = o3d.geometry.PointCloud()
+    pcd.points = o3d.utility.Vector3dVector(xyz)
+    pcd.estimate_normals(search_param=o3d.geometry.KDTreeSearchParamHybrid(1000, 5))
+    normal = np.asarray(pcd.normals)
+    
+    return normal
+
+
+def compute_v0(normal):
+    
+    e_vals, e_vecs = np.linalg.eig(np.dot(normal.T, normal))
+    v0 = e_vecs[:, np.argmin(e_vals)]
+    v0 = v0 / np.linalg.norm(v0)
+    
+    return v0
+
+
+def project2plane(xyz, v):
+       
+    v_left = np.cross(v, np.array([0, 0, -1]))
+    v_left = v_left / np.linalg.norm(v_left)
+    v_up = np.cross(v, v_left)
+    v_up = v_up / np.linalg.norm(v_up)
+    
+    xy_p = np.zeros((xyz.shape[0], 2))
+    
+    v_p = xyz - np.dot(xyz, v).reshape(-1, 1) * v.reshape(1, 3)
+    xy_p[:, 0] = np.dot(v_p, v_left)
+    xy_p[:, 1] = np.dot(v_p, v_up)
+        
+    return xy_p
+
+
+def compute_dis2axi(param, xyz, r):
+    
+    x0, y0 = param[0], param[1]
+    v0 = param[2:]
+    
+    xy_p = project2plane(xyz, v0)
+    d = np.sqrt((xy_p[:, 0] - x0) ** 2 + (xy_p[:, 1] - y0) ** 2) - r
+    
+    return d
+
+
+def fit_circle(param, xyz, r, v):
+    
+    x0, y0 = param[0], param[1]
+    
+    xy_p = project2plane(xyz, v)
+    d = np.sqrt((xy_p[:, 0] - x0) ** 2 + (xy_p[:, 1] - y0) ** 2) - r
+    
+    return d
+
+
+def compute_dis_fitted_circle(xyz, r, plsq_ring, plsq_seg):
+    
+    xy0_ring = plsq_ring[0:2]
+    v = plsq_ring[2:]
+    xy0_seg = plsq_seg[0:2]
+    
+    xy_p = project2plane(xyz, v)
+    xy_p_fitted = xy_p - xy0_seg.reshape(1, -1)
+    xy_p_fitted = xy_p_fitted / np.linalg.norm(xy_p_fitted, axis=1).reshape(-1, 1) * r
+    xy_p_fitted = xy_p_fitted + xy0_seg.reshape(1, -1)
+    
+    d = xy_p_fitted - xy0_ring
+    d = np.linalg.norm(d, axis=1) - r
+    
+    return d
+
+
+def fit_ellipse(param, xyz, r, v):
+    
+    xy_0 = param[0:2]
+    
+    xy_p = 
+    
+
+
+def compute_deformation(xyz, label, r, num_seg):
+    
+    xyz = xyz - np.mean(xyz, axis=0)
+    
+    d = []
+    
+    normal = compute_normal(xyz)
+    v0 = compute_v0(normal)
+    param_ring = np.zeros(5)
+    param_ring[2:] = v0[:]
+    plsq_ring = optimize.leastsq(compute_dis2axi, param_ring, args=(xyz, r))
+    plsq_ring = plsq_ring[0]
+    xy0_ring = plsq_ring[0:2]
+    v = plsq_ring[2:]
+    
+    d1 = compute_dis2axi(plsq_ring, xyz, r)
+    d1 = d1.reshape(-1, 1)
+    d.append(d1)
+    
+    
+    
+    if num_seg > 1:
+        d3 = np.zeros(xyz.shape[0])
+        for i in range(1, num_seg + 1):
+            index = label[:] == i
+            if index.any() == True:
+                xyz_seg = xyz[index, :]
+                plsq_seg = optimize.leastsq(fit_circle, xy0_ring, args=(xyz_seg, r, v))
+                plsq_seg = plsq_seg[0]
+                d3[index] = compute_dis_fitted_circle(xyz_seg, r, plsq_ring, plsq_seg)[:]
+        d3 = d3.reshape(-1, 1)
+        d.append(d3)
+    
+    d = np.hstack(d)
+
+    return d
+
+
+if __name__ == '__main__':
+    
+    r = 2.75
+    num_seg = 6
+    path_i = 'input'
+    path_o = 'output'
+    if os.path.exists(path_o):
+        os.makedirs(path_o)
+        
+    max_num = 40960
+
+    files = os.listdir(path_i)
+    
+    for file in files:
+        
+        pc = pd.read_csv(os.path.join(path_i, file), sep=' ', header=None)
+        pc = np.asarray(pc)
+        pc = pc[pc[:, 4] != 0, :]
+        if pc.shape[0] > max_num:
+            np.random.shuffle(pc)
+            pc = pc[0:max_num, :]
+        
+        xyz = pc[:, 0:3]
+        label = pc[:, 4]
+        
+        '''------call------'''
+        d = compute_deformation(xyz, label, r, num_seg)
+        '''------call------'''
+        
+        new_pc = np.zeros((pc.shape[0], pc.shape[1] + d.shape[1]))
+        new_pc[:, 0:pc.shape[1]] = pc[:, :]
+        new_pc[:, pc.shape[1]:] = d[:, :]
+        new_pc = pd.DataFrame(new_pc)
+        new_pc.to_csv(os.path.join(path_o, file), sep=' ', header=None, index=None)
+        
+    
+    
+
+
+
+
+
+
+
+
+
+
