@@ -83,8 +83,8 @@ def fit_ellipse(param, xyz, r, xy0_ring, v):
     f2 = xy0_ring + f_delta
     
     xy_p = project2plane(xyz, v)
+    # d = np.sum((np.linalg.norm(xy_p - f1, axis=1) + np.linalg.norm(xy_p - f2, axis=1) - 2 * r_ellipse) **2) / (xy_p.shape[0] - 1)
     d = np.linalg.norm(xy_p - f1, axis=1) + np.linalg.norm(xy_p - f2, axis=1) - 2 * r_ellipse
-    print(d)
     
     return d
 
@@ -92,25 +92,34 @@ def fit_ellipse(param, xyz, r, xy0_ring, v):
 def compute_dis_fitted_ellipse(xyz, r, xy0_ring, v, f_delta, r_ellipse):
     
     xy_p = project2plane(xyz, v)
-    xy_p_fitted = xy_p - xy0_ring.reshape(1, -1)
-    xy_p_fitted = xy_p_fitted / np.linalg.norm(xy_p_fitted, axis=1).reshape(-1, 1)
+    xy_p = xy_p - xy0_ring.reshape(1, -1)
+    xy_p = xy_p / np.linalg.norm(xy_p, axis=1).reshape(-1, 1)
+    # print(np.linalg.norm(xy_p, axis=1))
     
-    ang = np.arcsin(xy_p_fitted[:, 1])
-    index = xy_p_fitted[:, 0] <= 0
+    
+    ang = np.arcsin(xy_p[:, 1])
+    index = xy_p[:, 0] <= 0
     ang[index] = np.pi - ang[index]
     
     a = r_ellipse
     c = np.linalg.norm(f_delta)
     b = np.sqrt(a ** 2 - c ** 2)
-    ang_delta = np.arctan(f_delta[1] / (f_delta[0] + 1e-8))
+    ang_delta = np.arcsin(f_delta[1] / c)
+    print(np.cos(ang_delta))
+    print(np.sin(ang_delta))
     
     x_p_fitted = a * np.cos(ang) * np.cos(ang_delta) - b * np.sin(ang) * np.sin(ang_delta)
     y_p_fitted = b * np.sin(ang) * np.cos(ang_delta) + a * np.cos(ang) * np.sin(ang_delta)
+    # x_p_fitted = a * np.cos(ang)
+    # y_p_fitted = b * np.sin(ang)
     xy_p_fitted = np.hstack((x_p_fitted.reshape(-1, 1), y_p_fitted.reshape(-1, 1)))
-    xy_p_fitted = xy_p_fitted + xy0_ring.reshape(1, -1)
     
-    d = xy_p_fitted - xy0_ring
-    d = np.linalg.norm(d, axis=1) - r
+    # xy_p_fitted = xy_p_fitted + xy0_ring.reshape(1, -1)
+    
+    # d = xy_p_fitted - xy0_ring
+    # d = np.linalg.norm(d, axis=1) - r
+    
+    d = np.linalg.norm(xy_p_fitted, axis=1) - r
     
     return d    
 
@@ -135,13 +144,16 @@ def compute_deformation(xyz, label, r, num_seg):
     d.append(d1)
     
     param_ring_e = np.zeros(3)
-    param_ring_e[2] = r
+    param_ring_e[0], param_ring_e[1], param_ring_e[2] = 0.01, 0.01, r
+    # param_ring_e[2] = r
+    # plsq_ring_e = optimize.minimize(fit_ellipse, param_ring_e, args=(xyz, r, xy0_ring, v))
+    # plsq_ring_e = plsq_ring_e.x
     plsq_ring_e = optimize.leastsq(fit_ellipse, param_ring_e, args=(xyz, r, xy0_ring, v))
     plsq_ring_e = plsq_ring_e[0]
     f_delta = plsq_ring_e[0:2]
     r_ellipse = plsq_ring_e[2]
-    print(f_delta)
-    print(r_ellipse)
+    # print(f_delta)
+    # print(r_ellipse)
     d2 = compute_dis_fitted_ellipse(xyz, r, xy0_ring, v, f_delta, r_ellipse)
     d2 = d2.reshape(-1, 1)
     d.append(d2)
