@@ -42,30 +42,26 @@ def project2plane(xyz, v):
 
 def compute_dis2axi(param, xyz, r):
     
-    x0, y0 = param[0], param[1]
+    xy0 = param[0:2]
     v0 = param[2:]
     
     xy_p = project2plane(xyz, v0)
-    d = np.sqrt((xy_p[:, 0] - x0) ** 2 + (xy_p[:, 1] - y0) ** 2) - r
+    d = np.linalg.norm(xy_p - xy0, axis=1) - r
     
     return d
 
 
 def fit_circle(param, xyz, r, v):
     
-    x0, y0 = param[0], param[1]
+    xy0 = param[0:2]
     
     xy_p = project2plane(xyz, v)
-    d = np.sqrt((xy_p[:, 0] - x0) ** 2 + (xy_p[:, 1] - y0) ** 2) - r
+    d = np.linalg.norm(xy_p - xy0, axis=1) - r
     
     return d
 
 
-def compute_dis_fitted_circle(xyz, r, plsq_ring, plsq_seg):
-    
-    xy0_ring = plsq_ring[0:2]
-    v = plsq_ring[2:]
-    xy0_seg = plsq_seg[0:2]
+def compute_dis_fitted_circle(xyz, r, xy0_ring, v, xy0_seg):
     
     xy_p = project2plane(xyz, v)
     xy_p_fitted = xy_p - xy0_seg.reshape(1, -1)
@@ -78,12 +74,45 @@ def compute_dis_fitted_circle(xyz, r, plsq_ring, plsq_seg):
     return d
 
 
-def fit_ellipse(param, xyz, r, v):
+def fit_ellipse(param, xyz, r, xy0_ring, v):
     
-    xy_0 = param[0:2]
+    f_delta = param[0:2]
+    r_ellipse = param[2]
     
-    xy_p = 
+    f1 = xy0_ring - f_delta
+    f2 = xy0_ring + f_delta
     
+    xy_p = project2plane(xyz, v)
+    d = np.linalg.norm(xy_p - f1, axis=1) + np.linalg.norm(xy_p - f2, axis=1) - 2 * r_ellipse
+    print(d)
+    
+    return d
+
+
+def compute_dis_fitted_ellipse(xyz, r, xy0_ring, v, f_delta, r_ellipse):
+    
+    xy_p = project2plane(xyz, v)
+    xy_p_fitted = xy_p - xy0_ring.reshape(1, -1)
+    xy_p_fitted = xy_p_fitted / np.linalg.norm(xy_p_fitted, axis=1).reshape(-1, 1)
+    
+    ang = np.arcsin(xy_p_fitted[:, 1])
+    index = xy_p_fitted[:, 0] <= 0
+    ang[index] = np.pi - ang[index]
+    
+    a = r_ellipse
+    c = np.linalg.norm(f_delta)
+    b = np.sqrt(a ** 2 - c ** 2)
+    ang_delta = np.arctan(f_delta[1] / (f_delta[0] + 1e-8))
+    
+    x_p_fitted = a * np.cos(ang) * np.cos(ang_delta) - b * np.sin(ang) * np.sin(ang_delta)
+    y_p_fitted = b * np.sin(ang) * np.cos(ang_delta) + a * np.cos(ang) * np.sin(ang_delta)
+    xy_p_fitted = np.hstack((x_p_fitted.reshape(-1, 1), y_p_fitted.reshape(-1, 1)))
+    xy_p_fitted = xy_p_fitted + xy0_ring.reshape(1, -1)
+    
+    d = xy_p_fitted - xy0_ring
+    d = np.linalg.norm(d, axis=1) - r
+    
+    return d    
 
 
 def compute_deformation(xyz, label, r, num_seg):
@@ -105,6 +134,17 @@ def compute_deformation(xyz, label, r, num_seg):
     d1 = d1.reshape(-1, 1)
     d.append(d1)
     
+    param_ring_e = np.zeros(3)
+    param_ring_e[2] = r
+    plsq_ring_e = optimize.leastsq(fit_ellipse, param_ring_e, args=(xyz, r, xy0_ring, v))
+    plsq_ring_e = plsq_ring_e[0]
+    f_delta = plsq_ring_e[0:2]
+    r_ellipse = plsq_ring_e[2]
+    print(f_delta)
+    print(r_ellipse)
+    d2 = compute_dis_fitted_ellipse(xyz, r, xy0_ring, v, f_delta, r_ellipse)
+    d2 = d2.reshape(-1, 1)
+    d.append(d2)
     
     
     if num_seg > 1:
@@ -115,7 +155,8 @@ def compute_deformation(xyz, label, r, num_seg):
                 xyz_seg = xyz[index, :]
                 plsq_seg = optimize.leastsq(fit_circle, xy0_ring, args=(xyz_seg, r, v))
                 plsq_seg = plsq_seg[0]
-                d3[index] = compute_dis_fitted_circle(xyz_seg, r, plsq_ring, plsq_seg)[:]
+                xy0_seg = plsq_seg
+                d3[index] = compute_dis_fitted_circle(xyz_seg, r, xy0_ring, v, xy0_seg)[:]
         d3 = d3.reshape(-1, 1)
         d.append(d3)
     
@@ -130,7 +171,7 @@ if __name__ == '__main__':
     num_seg = 6
     path_i = 'input'
     path_o = 'output'
-    if os.path.exists(path_o):
+    if not os.path.exists(path_o):
         os.makedirs(path_o)
         
     max_num = 40960
