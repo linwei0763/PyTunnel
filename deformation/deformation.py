@@ -5,6 +5,50 @@ import pandas as pd
 from scipy import optimize
 
 
+class Ring():
+    def __init__(self, xyz, label, r, num_seg):
+        
+        self.raw_xyz = xyz
+        self.xyz = xyz - np.mean(xyz, axis=0)
+        self.label = label
+        self.r = r
+        self.num_seg = num_seg
+        
+        self.normal = self.compute_normal()
+        self.v0 = self.compute_v0()
+    
+    def compute_normal(self):
+        pcd = o3d.geometry.PointCloud()
+        pcd.points = o3d.utility.Vector3dVector(self.xyz)
+        pcd.estimate_normals(search_param=o3d.geometry.KDTreeSearchParamHybrid(1000, 5))
+        normal = np.asarray(pcd.normals)
+        return normal
+    
+    def compute_v0(self):
+        e_vals, e_vecs = np.linalg.eig(np.dot(self.normal.T, self.normal))
+        v0 = e_vecs[:, np.argmin(e_vals)]
+        v0 = v0 / np.linalg.norm(v0)
+        return v0
+    
+    @staticmethod
+    def project2plane(xyz, v):
+        
+        v_left = np.cross(v, np.array([0, 0, -1]))
+        v_left = v_left / np.linalg.norm(v_left)
+        v_up = np.cross(v, v_left)
+        v_up = v_up / np.linalg.norm(v_up)
+        
+        xy_p = np.zeros((xyz.shape[0], 2))
+        
+        v_p = xyz - np.dot(xyz, v).reshape(-1, 1) * v.reshape(1, 3)
+        xy_p[:, 0] = np.dot(v_p, v_left)
+        xy_p[:, 1] = np.dot(v_p, v_up)
+            
+        return xy_p
+        
+        
+
+
 def compute_normal(xyz):
     
     pcd = o3d.geometry.PointCloud()
@@ -83,7 +127,7 @@ def fit_ellipse(param, xyz, r, xy0_ring, v):
     f2 = xy0_ring + f_delta
     
     xy_p = project2plane(xyz, v)
-    # d = np.sum((np.linalg.norm(xy_p - f1, axis=1) + np.linalg.norm(xy_p - f2, axis=1) - 2 * r_ellipse) **2) / (xy_p.shape[0] - 1)
+
     d = np.linalg.norm(xy_p - f1, axis=1) + np.linalg.norm(xy_p - f2, axis=1) - 2 * r_ellipse
     
     return d
@@ -94,8 +138,6 @@ def compute_dis_fitted_ellipse(xyz, r, xy0_ring, v, f_delta, r_ellipse):
     xy_p = project2plane(xyz, v)
     xy_p = xy_p - xy0_ring.reshape(1, -1)
     xy_p = xy_p / np.linalg.norm(xy_p, axis=1).reshape(-1, 1)
-    # print(np.linalg.norm(xy_p, axis=1))
-    
     
     ang = np.arcsin(xy_p[:, 1])
     index = xy_p[:, 0] <= 0
@@ -105,19 +147,13 @@ def compute_dis_fitted_ellipse(xyz, r, xy0_ring, v, f_delta, r_ellipse):
     c = np.linalg.norm(f_delta)
     b = np.sqrt(a ** 2 - c ** 2)
     ang_delta = np.arcsin(f_delta[1] / c)
-    print(np.cos(ang_delta))
-    print(np.sin(ang_delta))
+    
+    ang = ang - ang_delta
     
     x_p_fitted = a * np.cos(ang) * np.cos(ang_delta) - b * np.sin(ang) * np.sin(ang_delta)
     y_p_fitted = b * np.sin(ang) * np.cos(ang_delta) + a * np.cos(ang) * np.sin(ang_delta)
-    # x_p_fitted = a * np.cos(ang)
-    # y_p_fitted = b * np.sin(ang)
+    
     xy_p_fitted = np.hstack((x_p_fitted.reshape(-1, 1), y_p_fitted.reshape(-1, 1)))
-    
-    # xy_p_fitted = xy_p_fitted + xy0_ring.reshape(1, -1)
-    
-    # d = xy_p_fitted - xy0_ring
-    # d = np.linalg.norm(d, axis=1) - r
     
     d = np.linalg.norm(xy_p_fitted, axis=1) - r
     
@@ -144,11 +180,9 @@ def compute_deformation(xyz, label, r, num_seg):
     d.append(d1)
     
     param_ring_e = np.zeros(3)
-    param_ring_e[0], param_ring_e[1], param_ring_e[2] = 0.01, 0.01, r
-    # param_ring_e[2] = r
-    # plsq_ring_e = optimize.minimize(fit_ellipse, param_ring_e, args=(xyz, r, xy0_ring, v))
-    # plsq_ring_e = plsq_ring_e.x
+    param_ring_e[0], param_ring_e[1], param_ring_e[2] = 0.01, 0, r
     plsq_ring_e = optimize.leastsq(fit_ellipse, param_ring_e, args=(xyz, r, xy0_ring, v))
+    print(plsq_ring_e)
     plsq_ring_e = plsq_ring_e[0]
     f_delta = plsq_ring_e[0:2]
     r_ellipse = plsq_ring_e[2]
@@ -157,7 +191,6 @@ def compute_deformation(xyz, label, r, num_seg):
     d2 = compute_dis_fitted_ellipse(xyz, r, xy0_ring, v, f_delta, r_ellipse)
     d2 = d2.reshape(-1, 1)
     d.append(d2)
-    
     
     if num_seg > 1:
         d3 = np.zeros(xyz.shape[0])
