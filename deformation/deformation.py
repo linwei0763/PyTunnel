@@ -183,8 +183,8 @@ if __name__ == '__main__':
     
     max_num = 40960
 
-    path_i = 'input'
-    path_o = 'output'
+    path_i = '../../Seg2Tunnel/seg2tunnel'
+    path_o = 'result'
     if not os.path.exists(path_o):
         os.makedirs(path_o)
         
