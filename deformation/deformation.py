@@ -20,6 +20,7 @@ class Ring():
         
         self.v = None
         self.xy0_ring = None
+        self.ovalization = None
         self.d = None
     
     def compute_deformation(self):
@@ -48,7 +49,7 @@ class Ring():
         f_delta = plsq_ring_e[0:2]
         r_ellipse = plsq_ring_e[2]
 
-        d2 = self.compute_dis_fitted_ellipse(xyz, r, xy0_ring, v, f_delta, r_ellipse)
+        ovalization, d2 = self.compute_dis_fitted_ellipse(xyz, r, xy0_ring, v, f_delta, r_ellipse)
         d2 = d2.reshape(-1, 1)
         d.append(d2)
         
@@ -69,6 +70,7 @@ class Ring():
         
         self.v = v
         self.xy0_ring = xy0_ring
+        self.ovalization = ovalization
         self.d = d
 
         return self.d
@@ -115,6 +117,8 @@ class Ring():
         b = np.sqrt(a ** 2 - c ** 2)
         ang_delta = np.arcsin(f_delta[1] / c)
         
+        ovalization = np.asarray([a, b, ang_delta])
+        
         ang = ang - ang_delta
         
         x_p_fitted = a * np.cos(ang) * np.cos(ang_delta) - b * np.sin(ang) * np.sin(ang_delta)
@@ -124,7 +128,7 @@ class Ring():
         
         d = np.linalg.norm(xy_p_fitted, axis=1) - r
         
-        return d
+        return ovalization, d
     
     @staticmethod
     def compute_dis2axi(param, xyz, r):
@@ -181,14 +185,23 @@ def project2plane(xyz, v):
 
 if __name__ == '__main__':
     
+    '''------config------'''
     max_num = 40960
-
-    path_i = '../../Seg2Tunnel/seg2tunnel'
+    
+    # path_i = '../../Seg2Tunnel/seg2tunnel'
+    path_i = 'data'
+    
     path_o = 'result'
+    
+    index_label = 5
+    '''------config------'''
+    
     if not os.path.exists(path_o):
         os.makedirs(path_o)
-        
     files = os.listdir(path_i)
+    
+    ovalization_all = []
+    pd.DataFrame(columns=['name', 'long', 'short', 'ang'])
     
     for file in files:
         
@@ -204,26 +217,31 @@ if __name__ == '__main__':
         
         pc = pd.read_csv(os.path.join(path_i, file), sep=' ', header=None)
         pc = np.asarray(pc)
-        pc = pc[pc[:, 4] != 0, :]
+        pc = pc[pc[:, index_label] != 0, :]
         if pc.shape[0] > max_num:
             np.random.shuffle(pc)
             pc = pc[0:max_num, :]
-        
         xyz = pc[:, 0:3]
-        label = pc[:, 4]
+        label = pc[:, index_label]
         
         '''------call------'''
         ring = Ring(xyz, label, r, num_seg)
         ring.compute_deformation()
+        ovalization = ring.ovalization
         d = ring.d
         '''------call------'''
-        
+
         new_pc = np.zeros((pc.shape[0], pc.shape[1] + d.shape[1]))
         new_pc[:, 0:pc.shape[1]] = pc[:, :]
         new_pc[:, pc.shape[1]:] = d[:, :]
         new_pc = pd.DataFrame(new_pc)
         new_pc.to_csv(os.path.join(path_o, file), sep=' ', header=None, index=None)
         
+        ovalization = {'name': file.split('.')[0], 'long': ovalization[0], 'short': ovalization[1], 'ang': ovalization[2]}
+        ovalization_all.append(ovalization)
+    
+    ovalization_all = pd.DataFrame(ovalization_all)
+    ovalization_all.to_csv(os.path.join(path_o, 'ovalization.csv'))
     
     
 
