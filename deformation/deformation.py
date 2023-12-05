@@ -190,12 +190,12 @@ if __name__ == '__main__':
     '''------config------'''
     max_num = 40960
     
-    # path_i = '../../Seg2Tunnel/seg2tunnel'
-    path_i = 'data'
+    path_i = '../../Seg2Tunnel/seg2tunnel'
+    # path_i = 'data'
     
     path_o = 'result'
     
-    index_label = 5
+    index_label = 4
     '''------config------'''
     
     if not os.path.exists(path_o):
