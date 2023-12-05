@@ -15,8 +15,8 @@ class Ring():
         self.r = r
         self.num_seg = num_seg
         
-        self.normal = self.compute_normal()
-        self.v0 = self.compute_v0()
+        self.normal = Ring.compute_normal(xyz)
+        self.v0 = Ring.compute_v0(self.normal)
         
         self.v = None
         self.xy0_ring = None
@@ -75,23 +75,10 @@ class Ring():
 
         return self.d
     
-    def compute_normal(self):
-        pcd = o3d.geometry.PointCloud()
-        pcd.points = o3d.utility.Vector3dVector(self.xyz)
-        pcd.estimate_normals(search_param=o3d.geometry.KDTreeSearchParamHybrid(1000, 5))
-        normal = np.asarray(pcd.normals)
-        return normal
-    
-    def compute_v0(self):
-        e_vals, e_vecs = np.linalg.eig(np.dot(self.normal.T, self.normal))
-        v0 = e_vecs[:, np.argmin(e_vals)]
-        v0 = v0 / np.linalg.norm(v0)
-        return v0
-    
     @staticmethod
     def compute_dis_fitted_circle(xyz, r, xy0_ring, v, xy0_seg):
         
-        xy_p = project2plane(xyz, v)
+        xy_p = Ring.project2plane(xyz, v)
         xy_p_fitted = xy_p - xy0_seg.reshape(1, -1)
         xy_p_fitted = xy_p_fitted / np.linalg.norm(xy_p_fitted, axis=1).reshape(-1, 1) * r
         xy_p_fitted = xy_p_fitted + xy0_seg.reshape(1, -1)
@@ -104,7 +91,7 @@ class Ring():
     @staticmethod
     def compute_dis_fitted_ellipse(xyz, r, xy0_ring, v, f_delta, r_ellipse):
         
-        xy_p = project2plane(xyz, v)
+        xy_p = Ring.project2plane(xyz, v)
         xy_p = xy_p - xy0_ring.reshape(1, -1)
         xy_p = xy_p / np.linalg.norm(xy_p, axis=1).reshape(-1, 1)
         
@@ -136,17 +123,32 @@ class Ring():
         xy0 = param[0:2]
         v0 = param[2:]
         
-        xy_p = project2plane(xyz, v0)
+        xy_p = Ring.project2plane(xyz, v0)
         d = np.linalg.norm(xy_p - xy0, axis=1) - r
         
         return d
+    
+    @staticmethod
+    def compute_normal(xyz):
+        pcd = o3d.geometry.PointCloud()
+        pcd.points = o3d.utility.Vector3dVector(xyz)
+        pcd.estimate_normals(search_param=o3d.geometry.KDTreeSearchParamHybrid(1000, 5))
+        normal = np.asarray(pcd.normals)
+        return normal
+    
+    @staticmethod
+    def compute_v0(normal):
+        e_vals, e_vecs = np.linalg.eig(np.dot(normal.T, normal))
+        v0 = e_vecs[:, np.argmin(e_vals)]
+        v0 = v0 / np.linalg.norm(v0)
+        return v0    
     
     @staticmethod
     def fit_circle(param, xyz, r, v):
         
         xy0 = param[0:2]
         
-        xy_p = project2plane(xyz, v)
+        xy_p = Ring.project2plane(xyz, v)
         d = np.linalg.norm(xy_p - xy0, axis=1) - r
         
         return d
@@ -160,27 +162,27 @@ class Ring():
         f1 = xy0_ring - f_delta
         f2 = xy0_ring + f_delta
         
-        xy_p = project2plane(xyz, v)
+        xy_p = Ring.project2plane(xyz, v)
 
         d = np.linalg.norm(xy_p - f1, axis=1) + np.linalg.norm(xy_p - f2, axis=1) - 2 * r_ellipse
         
         return d
-
-
-def project2plane(xyz, v):
     
-    v_left = np.cross(v, np.array([0, 0, -1]))
-    v_left = v_left / np.linalg.norm(v_left)
-    v_up = np.cross(v, v_left)
-    v_up = v_up / np.linalg.norm(v_up)
-    
-    xy_p = np.zeros((xyz.shape[0], 2))
-    
-    v_p = xyz - np.dot(xyz, v).reshape(-1, 1) * v.reshape(1, 3)
-    xy_p[:, 0] = np.dot(v_p, v_left)
-    xy_p[:, 1] = np.dot(v_p, v_up)
+    @staticmethod
+    def project2plane(xyz, v):
         
-    return xy_p
+        v_left = np.cross(v, np.array([0, 0, -1]))
+        v_left = v_left / np.linalg.norm(v_left)
+        v_up = np.cross(v, v_left)
+        v_up = v_up / np.linalg.norm(v_up)
+        
+        xy_p = np.zeros((xyz.shape[0], 2))
+        
+        v_p = xyz - np.dot(xyz, v).reshape(-1, 1) * v.reshape(1, 3)
+        xy_p[:, 0] = np.dot(v_p, v_left)
+        xy_p[:, 1] = np.dot(v_p, v_up)
+            
+        return xy_p
 
 
 if __name__ == '__main__':
