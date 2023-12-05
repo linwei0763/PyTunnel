@@ -26,6 +26,7 @@ class Ring():
     def compute_deformation(self):
         
         xyz = self.xyz
+        label = self.label
         r = self.r
         num_seg = self.num_seg
         v0 = self.v0
