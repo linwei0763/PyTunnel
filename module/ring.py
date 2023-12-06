@@ -5,11 +5,14 @@ from scipy import optimize
 
 class Ring():
     
-    def __init__(self, xyz, label, r, num_seg):
+    def __init__(self, xyz, intensity, label, r, num_seg):
         
-        self.raw_xyz = xyz
-        self.xyz = xyz - np.mean(xyz, axis=0)
+        self.offset = np.mean(xyz, axis=0)
+        
+        self.xyz = xyz - self.offset
+        self.intensity = intensity
         self.label = label
+        
         self.r = r
         self.num_seg = num_seg
         

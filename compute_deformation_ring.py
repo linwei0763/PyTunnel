@@ -44,10 +44,11 @@ if __name__ == '__main__':
             np.random.shuffle(pc)
             pc = pc[0:max_num, :]
         xyz = pc[:, 0:3]
+        intensity = pc[:, 3]
         label = pc[:, index_label]
-        
+    
         '''------call------'''
-        ring = Ring(xyz, label, r, num_seg)
+        ring = Ring(xyz, intensity, label, r, num_seg)
         ring.compute_deformation()
         ovalization = ring.ovalization
         d = ring.d
