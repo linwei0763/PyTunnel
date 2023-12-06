@@ -1,6 +1,6 @@
 import numpy as np
-import open3d as o3d
 from scipy import optimize
+from sklearn.neighbors import KDTree
 
 
 class Tunnel():
@@ -13,33 +13,30 @@ class Tunnel():
         self.intensity = intensity
         self.label = label
         
-        pcd = o3d.geometry.PointCloud()
-        pcd.points = o3d.utility.Vector3dVector(self.xyz)
-        pcd_tree = o3d.geometry.KDTreeFlann(pcd)
-        self.local_tree = pcd_tree
+        self.local_tree = KDTree(self.xyz)
         
         pini = np.asarray([1, 1, 0], dtype=float)
         plsq = optimize.leastsq(self.compute_dis2axis, pini, args=(self.xyz))
         self.axis_param = plsq[0]
         self.axis_d = np.zeros((self.xyz.shape[0], 3))
         self.axis_d[:, 0] = self.project2axis(self.xyz, self.axis_param)[:]
-        
-        pcd = o3d.geometry.PointCloud()
-        pcd.points = o3d.utility.Vector3dVector(self.axis_d)
-        pcd_tree = o3d.geometry.KDTreeFlann(pcd)
-        self.ring_tree = pcd_tree
+        self.ring_tree = KDTree(self.axis_d)
     
     def find_local_neighbour(self, centre_xyz, k_n):
         
-        [_, neigh_idx, _] = self.tree.search_knn_vector_3d(centre_xyz, k_n)
+        centre_xyz = centre_xyz - self.offset
+        _, neigh_idx = self.local_tree.query([centre_xyz], k=k_n)
+        neigh_idx = neigh_idx[0]
         
         return neigh_idx
     
     def find_ring_neighbour(self, centre_xyz, k_n):
         
+        centre_xyz = centre_xyz - self.offset        
         centre_axis_d = np.zeros(3)
-        centre_axis_d = self.project2axis(self.centre_xyz, self.axis_param)
-        [_, neigh_idx, _] = self.tree.search_knn_vector_3d(centre_axis_d, k_n)
+        centre_axis_d[0] = self.project2axis(centre_xyz.reshape(-1, 3), self.axis_param)
+        _, neigh_idx = self.ring_tree.query([centre_axis_d], k=k_n)
+        neigh_idx = neigh_idx[0]
         
         return neigh_idx
         
