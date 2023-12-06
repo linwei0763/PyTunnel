@@ -55,9 +55,7 @@ class Tunnel():
     def project2axis(xy, axis_param):
         
         a, b, c = axis_param[0], axis_param[1], axis_param[2]
-        
         x0, y0 = xy[:, 0], xy[:, 1]
-        
         x = x0 - a * (a * x0 + b * y0 + c) / (a ** 2 + b ** 2)
         y = y0 - b * (a * x0 + b * y0 + c) / (a ** 2 + b ** 2)
         d = x / abs(x) * np.sqrt(x ** 2 + (y + c / b) ** 2)
