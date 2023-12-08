@@ -32,6 +32,12 @@ if __name__ == '__main__':
             pc[0, :], pc[i, :] = pc[i, :], pc[0, :]
             break
     
+    centre_xyz = pc[0, 0:3]
+    
+    for i in range(len(sampling_ratio)):
+        
+        
+    
     xyz = pc[:, 0:3]
     intensity = pc[:, 3]
     label = np.asarray(pc[:, 4], dtype=int)
@@ -39,10 +45,8 @@ if __name__ == '__main__':
     all_num_point = pc.shape[0]
     
     tunnel = Tunnel(xyz, intensity, label)
-    
-    
             
-    centre_xyz = pc[0, 0:3]
+    
     local_neigh_index = tunnel.find_local_neighbour(centre_xyz, k_n)
     ring_neigh_index = tunnel.find_ring_neighbour(centre_xyz, k_n)
     
@@ -58,8 +62,6 @@ if __name__ == '__main__':
     
     pc_local_neigh = np.hstack([xyz, intensity.reshape(-1, 1), label.reshape(-1, 1), color_local_neigh])
     pc_ring_neigh = np.hstack([xyz, intensity.reshape(-1, 1), label.reshape(-1, 1), color_ring_neigh])
-    
-    
     
     pc_local_neigh = pd.DataFrame(pc_local_neigh)
     pc_local_neigh.to_csv(os.path.join(path_o, 'pc_local_neigh.txt'), sep=' ', header=False, index=False)
