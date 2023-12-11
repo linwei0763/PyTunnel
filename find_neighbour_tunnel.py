@@ -9,11 +9,11 @@ if __name__ == '__main__':
     
     '''------config------'''
     path_i = '../Seg2Tunnel/seg2tunnel_0.04'
-    file = '1-12'
+    file = '1-4'
     
     path_o = 'result'
     
-    k_n = 64
+    k_n = 16
     num_layer = 5
     sampling_ratio = [4, 4, 4, 4, 2]
     color_list = np.asarray([[253, 231, 37], [144, 215, 67], [53, 183, 121], [33, 145, 140], [49, 104, 142], [68, 57, 131], [68, 1, 84]], dtype=int)
@@ -34,10 +34,6 @@ if __name__ == '__main__':
     
     centre_xyz = pc[0, 0:3]
     
-    for i in range(len(sampling_ratio)):
-        
-        
-    
     xyz = pc[:, 0:3]
     intensity = pc[:, 3]
     label = np.asarray(pc[:, 4], dtype=int)
@@ -45,19 +41,16 @@ if __name__ == '__main__':
     all_num_point = pc.shape[0]
     
     tunnel = Tunnel(xyz, intensity, label)
-            
     
     local_neigh_index = tunnel.find_local_neighbour(centre_xyz, k_n)
     ring_neigh_index = tunnel.find_ring_neighbour(centre_xyz, k_n)
     
-    color_local_neigh = np.zeros((all_num_point, 3), dtype=int)
-    color_local_neigh[:, :] = 128
-    color_local_neigh[local_neigh_index, :] = color_list[label[local_neigh_index], :]
+    color_local_neigh = np.zeros((k_n, 3), dtype=int)
+    color_local_neigh[:, :] = color_list[label[local_neigh_index], :]
     color_local_neigh[0, :] = [255, 0, 0]
     
-    color_ring_neigh = np.zeros((all_num_point, 3), dtype=int)
-    color_ring_neigh[:, :] = 128
-    color_ring_neigh[ring_neigh_index, :] = color_list[label[ring_neigh_index], :]
+    color_ring_neigh = np.zeros((k_n, 3), dtype=int)
+    color_ring_neigh[:, :] = color_list[label[ring_neigh_index], :]
     color_ring_neigh[0, :] = [255, 0, 0]
     
     pc_local_neigh = np.hstack([xyz, intensity.reshape(-1, 1), label.reshape(-1, 1), color_local_neigh])
@@ -68,8 +61,12 @@ if __name__ == '__main__':
     pc_ring_neigh = pd.DataFrame(pc_ring_neigh)
     pc_ring_neigh.to_csv(os.path.join(path_o, 'pc_ring_neigh.txt'), sep=' ', header=False, index=False)
     
+    for i in range(len(sampling_ratio))
     
     
+    
+    pc = pd.DataFrame(pc)
+    pc.to_csv(os.path.join(path_o, 'pc.txt'), sep=' ', header=False, index=False)
     
     
     
