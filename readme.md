@@ -17,6 +17,9 @@ conda activate pytunnel
 
 cd PyTunnel
 
-# Module
+# feature
 
-deformation
+* compute the deformation of lining rings  
+* count the number of points  
+* find points in the local neighbourhood and structural neighbourhood of the centre points  
+* generate synthetic point clouds  
