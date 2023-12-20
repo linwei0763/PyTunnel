@@ -21,5 +21,5 @@ cd PyTunnel
 
 * compute the deformation of lining rings  
 * count the number of points  
-* find points in the local neighbourhood and structural neighbourhood of the centre points  
+* find points in the local neighbourhood and structural neighbourhood of the centre point  
 * generate synthetic point clouds  
