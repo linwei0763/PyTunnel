@@ -1,3 +1,5 @@
+# This repository includes the utils supporting Seg2Tunnel and LiningNet.
+
 # install
 
 conda create -n pytunnel python=3.8
@@ -19,13 +21,9 @@ cd PyTunnel
 
 # feature
 
-* compute_deformation_ring.py  
-compute the deformation of lining rings  
+* compute_deformation.py  
 * count_num_point.py  
-count the number of points  
 * count_ring.py  
-count the number of rings in each station  
-* find_neighbour_tunnel.py  
-find points in the local neighbourhood and structural neighbourhood of the centre point  
+* evaluate_sparse_data.py  
+* find_neighbour.py  
 * generate_synthetic_data.py  
-generate synthetic point clouds  

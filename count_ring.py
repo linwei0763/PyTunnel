@@ -4,14 +4,14 @@ import pandas as pd
 
 if __name__ == '__main__':
     
-    '''------config------'''
+    '''config'''
     path_i = '../Seg2Tunnel/seg2tunnel'
     
     tunnel_no = ['1', '2']
-    '''------config------'''
+    '''config'''
     
+    '''call'''
     files = os.listdir(path_i)
-    
     
     rings = {}
     
@@ -23,7 +23,7 @@ if __name__ == '__main__':
         ring = file.split('.')[0].split('-')[-1]
         if tunnel in rings.keys():
             rings[tunnel].append(ring)
-            
+    '''call'''
             
     
     
