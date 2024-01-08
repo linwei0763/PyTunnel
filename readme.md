@@ -19,7 +19,13 @@ cd PyTunnel
 
 # feature
 
-* compute the deformation of lining rings  
-* count the number of points  
-* find points in the local neighbourhood and structural neighbourhood of the centre point  
-* generate synthetic point clouds  
+* compute_deformation_ring.py  
+compute the deformation of lining rings  
+* count_num_point.py  
+count the number of points  
+* count_ring.py  
+count the number of rings in each station  
+* find_neighbour_tunnel.py  
+find points in the local neighbourhood and structural neighbourhood of the centre point  
+* generate_synthetic_data.py  
+generate synthetic point clouds  
