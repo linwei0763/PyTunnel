@@ -27,3 +27,4 @@ cd PyTunnel
 * evaluate_sparse_data.py  
 * find_neighbour.py  
 * generate_synthetic_data.py  
+* read_training_log.py  
