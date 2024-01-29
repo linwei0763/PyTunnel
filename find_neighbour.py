@@ -14,8 +14,7 @@ if __name__ == '__main__':
     path_o = 'result'
     
     k_n = 1024
-    num_layer = 5
-    sampling_ratio = [4, 4, 4, 4, 2]
+    
     color_list = np.asarray([[253, 231, 37], [144, 215, 67], [53, 183, 121], [33, 145, 140], [49, 104, 142], [68, 57, 131], [68, 1, 84]], dtype=int)
     '''------config------'''
     
