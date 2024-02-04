@@ -24,6 +24,7 @@ cd PyTunnel
 * compute_deformation.py  
 * count_num_point.py  
 * count_ring.py  
+* evaluate_data.py  
 * evaluate_sparse_data.py  
 * find_neighbour.py  
 * generate_synthetic_data.py  
