@@ -1,11 +1,12 @@
 import numpy as np
-import open3d as o3d
 from scipy import optimize
+
+from module.utils import compute_normal
 
 
 class Ring():
     
-    def __init__(self, xyz, intensity, label, r, num_seg):
+    def __init__(self, xyz, intensity, label, r, length, num_seg, angles, angles_key, v0_dir):
         
         self.offset = np.mean(xyz, axis=0)
         
@@ -14,10 +15,15 @@ class Ring():
         self.label = label
         
         self.r = r
+        self.length = length
         self.num_seg = num_seg
+        self.angles = angles
+        self.angles_key = angles_key
         
-        self.normal = Ring.compute_normal(xyz)
+        self.normal = compute_normal(xyz)
         self.v0 = Ring.compute_v0(self.normal)
+        if np.dot(self.v0, v0_dir) < 0:
+            self.v0 = - self.v0
         
         self.v = None
         self.xy0_ring = None
@@ -129,14 +135,6 @@ class Ring():
         d = np.linalg.norm(xy_p - xy0, axis=1) - r
         
         return d
-    
-    @staticmethod
-    def compute_normal(xyz):
-        pcd = o3d.geometry.PointCloud()
-        pcd.points = o3d.utility.Vector3dVector(xyz)
-        pcd.estimate_normals(search_param=o3d.geometry.KDTreeSearchParamHybrid(1000, 5))
-        normal = np.asarray(pcd.normals)
-        return normal
     
     @staticmethod
     def compute_v0(normal):

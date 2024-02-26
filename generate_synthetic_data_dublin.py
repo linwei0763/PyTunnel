@@ -2,6 +2,8 @@ import numpy as np
 import os
 import random as rd
 
+from module.utils import rotate_xyz_random
+
 
 def crop_random(pc, sca_crop, ratio_crop):
     
@@ -34,7 +36,7 @@ def generate_noise(res_noise, sca_noise, xyz):
             pc_noise.append([x, y, 0, 0, 0])
     pc_noise = np.asarray(pc_noise)
     
-    pc_noise = rotate_random_3d(pc_noise)
+    pc_noise = rotate_xyz_random(pc_noise)
     pc_noise[:, 0:3] = pc_noise[:, 0:3] + xyz.reshape(1, 3)
     
     return pc_noise
@@ -78,21 +80,6 @@ def generate_tunnel(res, a, b, length, pav_z, cel_z, res_noise, sca_noise, ratio
     pc = np.vstack((pc_lin ,pc_pav))
     
     pc = generate_jitter(pc, sca_jit)
-    
-    return pc
-
-
-def rotate_random_3d(pc):
-    
-    ang = rd.uniform(0, 360)/180*np.pi
-    R = np.array([[np.cos(ang), -np.sin(ang), 0], [np.sin(ang), np.cos(ang), 0], [0, 0, 1]])
-    pc[:, 0:3] = np.dot(R, pc[:, 0:3].T).T
-    ang = rd.uniform(0, 360)/180*np.pi
-    R = np.array([[1, 0, 0], [0, np.cos(ang), -np.sin(ang)], [0, np.sin(ang), np.cos(ang)]])
-    pc[:, 0:3] = np.dot(R, pc[:, 0:3].T).T
-    ang = rd.uniform(0, 360)/180*np.pi
-    R = np.array([[np.cos(ang), 0, np.sin(ang)], [0, 1, 0], [-np.sin(ang), 0, np.cos(ang)]])
-    pc[:, 0:3] = np.dot(R, pc[:, 0:3].T).T
     
     return pc
 

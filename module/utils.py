@@ -1,0 +1,110 @@
+import copy
+import numpy as np
+import open3d as o3d
+import random as rd
+
+
+def compute_dis2axis_2d(param, xy):
+    
+    a, b, c = param[0], param[1], param[2]
+    d = np.sqrt((a * xy[:, 0] + b * xy[:, 1] + c) ** 2 / (a ** 2 + b ** 2))
+    
+    return d
+
+
+def compute_normal(xyz):
+    
+    pcd = o3d.geometry.PointCloud()
+    pcd.points = o3d.utility.Vector3dVector(xyz)
+    pcd.estimate_normals(search_param=o3d.geometry.KDTreeSearchParamHybrid(1000, 5))
+    normal = np.asarray(pcd.normals)
+    
+    return normal
+
+
+def grid_sample(points, voxel_size):
+    
+    features = points[:, 3:]
+    points = points[:, 0:3]
+
+    non_empty_voxel_keys, inverse, nb_pts_per_voxel = np.unique(((points - np.min(points, axis=0)) // voxel_size).astype(int), axis=0, return_inverse=True, return_counts=True)
+    idx_pts_vox_sorted = np.argsort(inverse)
+    voxel_grid={}
+    voxel_grid_f={}
+    sub_points, sub_features = [], []
+    last_seen=0
+
+    for idx, vox in enumerate(non_empty_voxel_keys):
+        voxel_grid[tuple(vox)] = points[idx_pts_vox_sorted[last_seen: last_seen+nb_pts_per_voxel[idx]]]
+        voxel_grid_f[tuple(vox)] = features[idx_pts_vox_sorted[last_seen: last_seen+nb_pts_per_voxel[idx]]]
+        sub_points.append(voxel_grid[tuple(vox)][np.linalg.norm(voxel_grid[tuple(vox)] - np.mean(voxel_grid[tuple(vox)], axis=0), axis=1).argmin()])
+        sub_features.append(voxel_grid_f[tuple(vox)][np.linalg.norm(voxel_grid_f[tuple(vox)] - np.mean(voxel_grid_f[tuple(vox)], axis=0), axis=1).argmin()])
+        last_seen += nb_pts_per_voxel[idx]
+        
+    sub_points = np.hstack((np.asarray(sub_points), np.asarray(sub_features)))
+
+    return sub_points
+
+
+def norm_intensity(intensity):
+    
+    bottom, up = np.percentile(intensity, 1), np.percentile(intensity, 99)
+    intensity[intensity < bottom] = bottom
+    intensity[intensity > up] = up
+    intensity -= bottom
+    intensity = intensity / (up - bottom)
+    
+    return intensity
+
+
+def project2axis_2d(xy, param):
+    
+    a, b, c = param[0], param[1], param[2]
+    x0, y0 = xy[:, 0], xy[:, 1]
+    x = x0 - a * (a * x0 + b * y0 + c) / (a ** 2 + b ** 2)
+    y = y0 - b * (a * x0 + b * y0 + c) / (a ** 2 + b ** 2)
+    d = x / abs(x) * np.sqrt(x ** 2 + (y + c / b) ** 2)
+    
+    return d
+
+
+def rotate_xz(pc, ang):
+    
+    xz = copy.deepcopy(pc[:, [0, 2]])
+    mat = [[np.cos(ang), -np.sin(ang)], [np.sin(ang), np.cos(ang)]]
+    mat = np.asarray(mat)
+    xz = np.dot(mat, xz.T).T
+    
+    new_pc = copy.deepcopy(pc)
+    new_pc[:, 0] = xz[:, 0]
+    new_pc[:, 2] = xz[:, 1]
+    
+    return new_pc
+
+
+def rotate_xy(pc, ang):
+    
+    xy = copy.deepcopy(pc[:, 0:2])
+    mat = [[np.cos(ang), -np.sin(ang)], [np.sin(ang), np.cos(ang)]]
+    mat = np.asarray(mat)
+    xy = np.dot(mat, xy.T).T
+    
+    new_pc = copy.deepcopy(pc)
+    new_pc[:, 0:2] = xy[:, :]
+    
+    return new_pc
+
+
+def rotate_xyz_random(pc):
+    
+    ang = rd.uniform(0, 360)/180*np.pi
+    R = np.array([[np.cos(ang), -np.sin(ang), 0], [np.sin(ang), np.cos(ang), 0], [0, 0, 1]])
+    pc[:, 0:3] = np.dot(R, pc[:, 0:3].T).T
+    ang = rd.uniform(0, 360)/180*np.pi
+    R = np.array([[1, 0, 0], [0, np.cos(ang), -np.sin(ang)], [0, np.sin(ang), np.cos(ang)]])
+    pc[:, 0:3] = np.dot(R, pc[:, 0:3].T).T
+    ang = rd.uniform(0, 360)/180*np.pi
+    R = np.array([[np.cos(ang), 0, np.sin(ang)], [0, 1, 0], [-np.sin(ang), 0, np.cos(ang)]])
+    pc[:, 0:3] = np.dot(R, pc[:, 0:3].T).T
+    
+    return pc

@@ -4,40 +4,7 @@ import os
 import pandas as pd
 from sklearn.metrics import confusion_matrix
 
-
-def norm_intensity(intensity):
-    
-    bottom, up = np.percentile(intensity, 1), np.percentile(intensity, 99)
-    intensity[intensity < bottom] = bottom
-    intensity[intensity > up] = up
-    intensity -= bottom
-    intensity = intensity / (up - bottom)
-    
-    return intensity
-
-
-def grid_sample(points, voxel_size):
-    
-    features = points[:, 3:]
-    points = points[:, 0:3]
-
-    non_empty_voxel_keys, inverse, nb_pts_per_voxel = np.unique(((points - np.min(points, axis=0)) // voxel_size).astype(int), axis=0, return_inverse=True, return_counts=True)
-    idx_pts_vox_sorted = np.argsort(inverse)
-    voxel_grid={}
-    voxel_grid_f={}
-    sub_points, sub_features = [], []
-    last_seen=0
-
-    for idx, vox in enumerate(non_empty_voxel_keys):
-        voxel_grid[tuple(vox)] = points[idx_pts_vox_sorted[last_seen: last_seen+nb_pts_per_voxel[idx]]]
-        voxel_grid_f[tuple(vox)] = features[idx_pts_vox_sorted[last_seen: last_seen+nb_pts_per_voxel[idx]]]
-        sub_points.append(voxel_grid[tuple(vox)][np.linalg.norm(voxel_grid[tuple(vox)] - np.mean(voxel_grid[tuple(vox)], axis=0), axis=1).argmin()])
-        sub_features.append(voxel_grid_f[tuple(vox)][np.linalg.norm(voxel_grid_f[tuple(vox)] - np.mean(voxel_grid_f[tuple(vox)], axis=0), axis=1).argmin()])
-        last_seen += nb_pts_per_voxel[idx]
-        
-    sub_points = np.hstack((np.asarray(sub_points), np.asarray(sub_features)))
-
-    return sub_points
+from module.utils import norm_intensity, grid_sample
 
 
 def prepare_sparse_data(voxel_size, path_data, sparse_stations, sparse_rings):

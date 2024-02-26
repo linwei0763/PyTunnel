@@ -1,7 +1,8 @@
-import copy
 import numpy as np
 import os
 import random as rd
+
+from module.utils import rotate_xy, rotate_xz
 
 
 def generate_ring(len_seg, r, wid_joi, dep_joi, res, res_joi):
@@ -95,33 +96,6 @@ def generate_tunnel(len_seg, r, wid_joi, dep_joi, res, res_joi):
     np.random.shuffle(pc)
     
     return pc
-
-
-def rotate_xz(ring, ang):
-    
-    xz = copy.deepcopy(ring[:, [0, 2]])
-    mat = [[np.cos(ang), -np.sin(ang)], [np.sin(ang), np.cos(ang)]]
-    mat = np.asarray(mat)
-    xz = np.dot(mat, xz.T).T
-    
-    new_ring = copy.deepcopy(ring)
-    new_ring[:, 0] = xz[:, 0]
-    new_ring[:, 2] = xz[:, 1]
-    
-    return new_ring
-
-
-def rotate_xy(pc, ang):
-    
-    xy = copy.deepcopy(pc[:, 0:2])
-    mat = [[np.cos(ang), -np.sin(ang)], [np.sin(ang), np.cos(ang)]]
-    mat = np.asarray(mat)
-    xy = np.dot(mat, xy.T).T
-    
-    new_pc = copy.deepcopy(pc)
-    new_pc[:, 0:2] = xy[:, :]
-    
-    return new_pc
 
 
 if __name__ == '__main__':
