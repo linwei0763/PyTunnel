@@ -12,14 +12,46 @@ def compute_dis2axis_2d(param, xy):
     return d
 
 
-def compute_normal(xyz):
+def compute_normal(xyz, num_search):
     
     pcd = o3d.geometry.PointCloud()
     pcd.points = o3d.utility.Vector3dVector(xyz)
-    pcd.estimate_normals(search_param=o3d.geometry.KDTreeSearchParamHybrid(1000, 5))
+    pcd.estimate_normals(search_param=o3d.geometry.KDTreeSearchParamKNN(num_search))
     normal = np.asarray(pcd.normals)
     
     return normal
+
+
+def fit_circle_v(param, xyz, r):
+    
+    xy_o = param[0:2]
+    v = param[2:]
+    
+    xyz_p = project2plane(xyz, v)
+    xy_p = xyz_p[:, 0:2]
+    
+    d = np.linalg.norm(xy_p - xy_o, axis=1) - r
+    
+    return d
+
+
+def fit_ellipse_v(param, xyz):
+    
+    xy_o = param[0:2]
+    v = param[2:5]
+    f_delta = param[5:7]
+    r_ellipse = param[7]
+    
+    f1 = xy_o - f_delta
+    f2 = xy_o + f_delta
+    
+    xyz_p = project2plane(xyz, v)
+    xy_p = xyz_p[:, 0:2]
+
+    d = np.linalg.norm(xy_p - f1, axis=1) + np.linalg.norm(xy_p - f2, axis=1) - 2 * r_ellipse
+    
+    return d
+
 
 
 def grid_sample(points, voxel_size):
@@ -66,6 +98,25 @@ def project2axis_2d(xy, param):
     d = x / abs(x) * np.sqrt(x ** 2 + (y + c / b) ** 2)
     
     return d
+
+
+def project2plane(xyz, v):
+    
+    v = v / np.linalg.norm(v)
+    
+    v_left = np.cross(v, np.array([0, 0, -1]))
+    v_left = v_left / np.linalg.norm(v_left)
+    v_up = np.cross(v, v_left)
+    v_up = v_up / np.linalg.norm(v_up)
+    
+    xyz_p = np.zeros((xyz.shape[0], 3))
+    
+    v_p = xyz - np.dot(xyz, v).reshape(-1, 1) * v.reshape(1, 3)
+    xyz_p[:, 0] = np.dot(v_p, v_left)
+    xyz_p[:, 1] = np.dot(v_p, v_up)
+    xyz_p[:, 2] = np.dot(v_p, v)
+        
+    return xyz_p
 
 
 def rotate_xz(pc, ang):
