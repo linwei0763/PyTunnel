@@ -22,6 +22,24 @@ def compute_normal(xyz, num_search):
     return normal
 
 
+def fit_circle(param, xy_p, r):
+    
+    xy_o = param
+    
+    d = np.linalg.norm(xy_p - xy_o, axis=1) - r
+    
+    return d
+
+
+# def fit_circle_hyper(xy_p, r):
+    
+#     xy_o = param
+    
+#     d = np.linalg.norm(xy_p - xy_o, axis=1) - r
+    
+#     return d
+
+
 def fit_circle_v(param, xyz, r):
     
     xy_o = param[0:2]
@@ -51,7 +69,6 @@ def fit_ellipse_v(param, xyz):
     d = np.linalg.norm(xy_p - f1, axis=1) + np.linalg.norm(xy_p - f2, axis=1) - 2 * r_ellipse
     
     return d
-
 
 
 def grid_sample(points, voxel_size):
@@ -114,7 +131,7 @@ def project2plane(xyz, v):
     v_p = xyz - np.dot(xyz, v).reshape(-1, 1) * v.reshape(1, 3)
     xyz_p[:, 0] = np.dot(v_p, v_left)
     xyz_p[:, 1] = np.dot(v_p, v_up)
-    xyz_p[:, 2] = np.dot(v_p, v)
+    xyz_p[:, 2] = np.dot(xyz, v)
         
     return xyz_p
 
@@ -159,3 +176,12 @@ def rotate_xyz_random(pc):
     pc[:, 0:3] = np.dot(R, pc[:, 0:3].T).T
     
     return pc
+
+
+def solve_contradiction(matrix):
+    
+    e_vals, e_vecs = np.linalg.eig(np.dot(matrix.T, matrix))
+    vec = e_vecs[:, np.argmin(e_vals)]
+    vec = vec / np.linalg.norm(vec)
+    
+    return vec
