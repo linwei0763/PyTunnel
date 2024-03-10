@@ -19,9 +19,9 @@ if __name__ == '__main__':
     # flag_all = True
     flag_all = False
     if not flag_all:
-        # part_stations = ['0-0', '0-103', '1-1', '3-1', '4-1']
+        part_stations = ['0-0', '0-103', '1-1', '3-1', '4-1']
         # part_stations = ['0-103', '1-1', '3-1', '4-1']
-        part_stations = ['0-103']
+        # part_stations = ['0-103']
     
     voxel_size = 0.04
     max_num = 40960
