@@ -13,15 +13,13 @@ if __name__ == '__main__':
     path_i = '../Seg2Tunnel/seg2tunnel'
     # path_i = 'data'
     
-    fit_method = 'ls'
-    fit_method = 'hyper'
-    
     # flag_all = True
     flag_all = False
     if not flag_all:
-        part_stations = ['0-0', '0-103', '1-1', '3-1', '4-1']
+        # part_stations = ['0-0', '0-103', '1-1', '3-1', '4-1']
         # part_stations = ['0-103', '1-1', '3-1', '4-1']
-        # part_stations = ['0-103']
+        # part_stations = ['0-0', '0-103']
+        part_stations = ['0-0', '0-12', '0-16', '0-19', '0-20', '0-25', '0-76', '0-81', '0-89', '0-96', '0-98', '0-101', '0-103']
     
     voxel_size = 0.04
     max_num = 40960
@@ -119,8 +117,10 @@ if __name__ == '__main__':
     
     for station in stations.keys():
         
-        if flag_v0_dir[int(station.split('-')[0])] is not None:
-            v0_dir_all[station] = np.asarray(flag_v0_dir[int(station.split('-')[0])])
+        tunnel_no = int(station.split('-')[0])
+        
+        if flag_v0_dir[tunnel_no] is not None:
+            v0_dir_all[station] = np.asarray(flag_v0_dir[tunnel_no])
         else:
             ring0 = pd.read_csv(os.path.join(path_i, stations[station][0]), sep=' ', header=None)
             ring0 = np.asarray(ring0)
@@ -137,7 +137,6 @@ if __name__ == '__main__':
     
         for file in stations[station]:
             
-            tunnel_no = int(station.split('-')[0])
             pc = pd.read_csv(os.path.join(path_i, file), sep=' ', header=None)
             pc = np.asarray(pc)
             pc = pc[pc[:, index_label] != 0, :]
@@ -148,6 +147,7 @@ if __name__ == '__main__':
                 pc = pc[0:max_num, :]
                 
             if flag_trans_yz[tunnel_no]:
+                pc[:, 0]= - pc[:, 0]
                 pc[:, [1, 2]]= pc[:, [2, 1]]
             
             ring = Ring(pc[:, 0:3], pc[:, 3], pc[:, 4], r_all[tunnel_no], length_all[tunnel_no], width_all[tunnel_no],  num_seg_all[tunnel_no], angles_b_all[tunnel_no], angles_m_all[tunnel_no], angles_f_all[tunnel_no], v0_dir_all[station])
@@ -161,10 +161,14 @@ if __name__ == '__main__':
             pc = np.hstack((pc, xyz_p, d, error))
             xyz_p, d, error, dislocation_all, rotation_all = ring.compute_d_seg_lin()
             pc = np.hstack((pc, xyz_p, d, error))
-            dislocation_all_all.append([file.split('.')[0], dislocation_all])
-            rotation_all_all.append([file.split('.')[0], rotation_all])
+            dislocation_all_all.append([int(file.split('.')[0].split('-')[0]), int(file.split('.')[0].split('-')[1]), int(file.split('.')[0].split('-')[2])])
+            rotation_all_all.append([int(file.split('.')[0].split('-')[0]), int(file.split('.')[0].split('-')[1]), int(file.split('.')[0].split('-')[2])])
+            for i in range(num_seg_all[tunnel_no]):
+                dislocation_all_all[-1].append(dislocation_all[i])
+                rotation_all_all[-1].append(rotation_all[i])
             
             if flag_trans_yz[tunnel_no]:
+                pc[:, 0]= - pc[:, 0]
                 pc[:, [1, 2]]= pc[:, [2, 1]]
             
             np.savetxt(os.path.join(path_o, file), pc, fmt=fmt)
@@ -175,52 +179,3 @@ if __name__ == '__main__':
     dislocation_all_all.to_excel(os.path.join(path_o, 'dislocation.xlsx'), header=False, index=False)
     rotation_all_all = pd.DataFrame(rotation_all_all)
     rotation_all_all.to_excel(os.path.join(path_o, 'rotation.xlsx'), header=False, index=False)
-    
-    # ovalization_all = []
-    # pd.DataFrame(columns=['name', 'long', 'short', 'theta'])
-    
-    # for file in files:
-        
-    #     r = r_all[int(file.split('-')[0])]
-    #     num_seg = num_seg_all[int(file.split('-')[0])]
-        
-    #     pc = pd.read_csv(os.path.join(path_i, file), sep=' ', header=None)
-    #     pc = np.asarray(pc)
-    #     pc = pc[pc[:, index_label] != 0, :]
-    #     if pc.shape[0] > max_num:
-    #         np.random.shuffle(pc)
-    #         pc = pc[0:max_num, :]
-    #     xyz = pc[:, 0:3]
-    #     intensity = pc[:, 3]
-    #     label = pc[:, index_label]
-    
-        # '''------call------'''
-        # ring = Ring(xyz, intensity, label, r, num_seg)
-        # ring.compute_deformation()
-        # ovalization = ring.ovalization
-        # d = ring.d
-        # '''------call------'''
-
-    #     new_pc = np.zeros((pc.shape[0], pc.shape[1] + d.shape[1]))
-    #     new_pc[:, 0:pc.shape[1]] = pc[:, :]
-    #     new_pc[:, pc.shape[1]:] = d[:, :]
-    #     new_pc = pd.DataFrame(new_pc)
-    #     new_pc.to_csv(os.path.join(path_o, file), sep=' ', header=None, index=None)
-        
-    #     ovalization = {'name': file.split('.')[0], 'long': ovalization[0], 'short': ovalization[1], 'ang': ovalization[2]}
-    #     ovalization_all.append(ovalization)
-    
-    # ovalization_all = pd.DataFrame(ovalization_all)
-    # ovalization_all.to_csv(os.path.join(path_o, 'ovalization.csv'))
-    
-    
-
-
-
-
-
-
-
-
-
-
