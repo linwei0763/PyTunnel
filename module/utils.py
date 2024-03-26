@@ -31,13 +31,49 @@ def fit_circle(param, xy_p, r):
     return d
 
 
-# def fit_circle_hyper(xy_p, r):
+def fit_ellipse(param, xy_p):
     
-#     xy_o = param
+    f_delta = param[0:2]
+    r_ellipse = param[2]
     
-#     d = np.linalg.norm(xy_p - xy_o, axis=1) - r
+    f1 = - f_delta
+    f2 = f_delta
     
-#     return d
+    d = np.linalg.norm(xy_p - f1, axis=1) + np.linalg.norm(xy_p - f2, axis=1) - 2 * r_ellipse
+    
+    return d
+
+
+
+def fit_ellipse_hyper(xy_p):
+    
+    num_point = xy_p.shape[0]
+    x = xy_p[:, 0]
+    y = xy_p[:, 1]
+    f0 = np.max(np.abs(xy_p))
+    
+    
+    
+    xi = np.asarray([x ** 2, x * y, y ** 2, np.ones(num_point) * f0 ** 2])
+    matrix_m = np.dot(xi, xi.T) / num_point
+    
+    eigenvalues, eigenvectors = np.linalg.eigh(matrix_m)
+    index = np.argsort(np.abs(eigenvalues))[0]
+    solution = eigenvectors[index]
+    
+    solution = solution / ( - (f0 ** 2) * solution[3])
+    
+    theta_ellipse = np.arctan2(solution[1], solution[0] - solution[2]) / 2
+    
+    
+    a = np.sqrt(1 / (solution[0] + (solution[1] * np.tan(theta_ellipse)) / 2))
+    
+    b = np.sqrt(1 / (solution[0] - solution[1] / (2 * np.tan(theta_ellipse))))
+    
+    print(b)
+    
+    return a, b, theta_ellipse
+
 
 
 def fit_circle_v(param, xyz, r):

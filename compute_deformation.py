@@ -19,7 +19,8 @@ if __name__ == '__main__':
         # part_stations = ['0-0', '0-103', '1-1', '3-1', '4-1']
         # part_stations = ['0-103', '1-1', '3-1', '4-1']
         # part_stations = ['0-0', '0-103']
-        part_stations = ['0-0', '0-12', '0-16', '0-19', '0-20', '0-25', '0-76', '0-81', '0-89', '0-96', '0-98', '0-101', '0-103']
+        # part_stations = ['4-1', '4-2', '4-3']
+        part_stations = ['1-4']
     
     voxel_size = 0.04
     max_num = 40960
@@ -159,8 +160,12 @@ if __name__ == '__main__':
             ovalisation_all.append([file.split('.')[0], ovalisation[0], ovalisation[1], ovalisation[2]])
             xyz_p, d, error = ring.compute_d_seg_circle()
             pc = np.hstack((pc, xyz_p, d, error))
-            xyz_p, d, error, dislocation_all, rotation_all = ring.compute_d_seg_lin()
+            xyz_p, d, error, dislocation_all, rotation_all = ring.compute_d_seg_ellipse()
             pc = np.hstack((pc, xyz_p, d, error))
+            # xyz_p, d, error, dislocation_all, rotation_all = ring.compute_d_seg_lin()
+            # dislocation_all, rotation_all = ring.compute_d_seg_lin()
+            
+            
             dislocation_all_all.append([int(file.split('.')[0].split('-')[0]), int(file.split('.')[0].split('-')[1]), int(file.split('.')[0].split('-')[2])])
             rotation_all_all.append([int(file.split('.')[0].split('-')[0]), int(file.split('.')[0].split('-')[1]), int(file.split('.')[0].split('-')[2])])
             for i in range(num_seg_all[tunnel_no]):
