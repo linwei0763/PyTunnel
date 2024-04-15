@@ -20,7 +20,7 @@ if __name__ == '__main__':
         # part_stations = ['0-103', '1-1', '3-1', '4-1']
         # part_stations = ['0-0', '0-103']
         # part_stations = ['4-1', '4-2', '4-3']
-        part_stations = ['3-1']
+        part_stations = ['1-4']
     
     voxel_size = 0.04
     max_num = 40960
@@ -86,6 +86,7 @@ if __name__ == '__main__':
     flag_v0_dir = [[0, 1, 0], None, None, None, None, None]
     
     fmt = '%.8f %.8f %.8f %.8f %d'
+    fmt +=  ' %.8f %.8f %.8f %.8f %.8f'
     fmt +=  ' %.8f %.8f %.8f %.8f %.8f'
     fmt +=  ' %.8f %.8f %.8f %.8f %.8f'
     fmt +=  ' %.8f %.8f %.8f %.8f %.8f'
@@ -168,6 +169,10 @@ if __name__ == '__main__':
             
             # 4
             xyz_p, d, error, dislocation_all, rotation_all = ring.compute_d_seg_ellipse()
+            pc = np.hstack((pc, xyz_p, d, error))
+            
+            # 5
+            xyz_p, d, error = ring.compute_d_seg_fourier()
             pc = np.hstack((pc, xyz_p, d, error))
             
             dislocation_all_all.append([int(file.split('.')[0].split('-')[0]), int(file.split('.')[0].split('-')[1]), int(file.split('.')[0].split('-')[2])])

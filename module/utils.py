@@ -76,14 +76,20 @@ def fit_ellipse_v(param, xyz):
     return d
 
 
-def fit_fourier(param, k, xy_p):
+def fit_fourier(param, xy_p, k):
     
+    param_0 = param[2 * k]
+    param_1 = param[0:k]
+    param_2 = param[k:2 * k]
     
+    d = np.zeros(xy_p.shape[0])
+    d[:] = param_0
     
-    param_x = param[:k]
-    param_y = param[k:]
+    theta_xy_p = np.arctan2(xy_p[:, 1], xy_p[:, 0])
+    for i in range(k):
+        d += param_1[i] * np.cos((i + 1) * theta_xy_p) + param_2[i] * np.sin((i + 1) * theta_xy_p)
     
-    
+    d = np.linalg.norm(xy_p, axis=1) - d
     
     return d
 
