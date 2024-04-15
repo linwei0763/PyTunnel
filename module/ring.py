@@ -2,7 +2,7 @@ import copy
 import numpy as np
 from scipy import optimize
 
-from module.utils import compute_normal, fit_circle, fit_ellipse, fit_ellipse_hyper, fit_circle_v, fit_ellipse_v, project2plane, rotate_xy, solve_contradiction
+from module.utils import compute_normal, fit_circle, fit_ellipse, fit_circle_v, fit_ellipse_v, project2plane, rotate_xy, solve_contradiction
 
 
 class Ring():
@@ -145,13 +145,11 @@ class Ring():
         
         return xyz_p, d, error
     
-    
     def compute_d_seg_ellipse(self):
         
         if self.d_seg_circle is None:
             self.compute_d_seg_circle()
         xyz_p = self.d_seg_circle[0]
-        # xy_o_all = self.d_seg_circle[3]
         
         param_0 = np.zeros(2)
         bounds_0 = ([- 0.1, - np.pi], [0.1, np.pi])
@@ -159,13 +157,14 @@ class Ring():
         param_0_ls = optimize.least_squares(Ring.fit_0, param_0, bounds=bounds_0, args=(param_1, self.num_seg, self.r, self.length, self.width, self.angles_b, self.angles_m, self.angles_f, xyz_p, self.label))
         param_0_ls = param_0_ls.x
         
+        delta_z = param_0_ls[0]
         delta_theta = param_0_ls[1]
+        
+        xyz_p[:, 2] = xyz_p[:, 2] + delta_z
         xyz_p = rotate_xy(xyz_p, delta_theta)
         
-        d = np.zeros(self.xyz.shape[0])
-        error = np.zeros(self.xyz.shape[0])
-        
-        # xy_o_ellipse_all = np.zeros((self.num_seg, 2))
+        d = np.zeros(self.num_point)
+        error = np.zeros(self.num_point)
         
         ovalisation_seg_all = []            
         
@@ -178,25 +177,19 @@ class Ring():
             
             xy_p_seg = xyz_p[index, 0:2]
             
-            # param = np.zeros(3)
-            # param[2] = self.r
-            
-            # param_ls = optimize.least_squares(fit_ellipse, param, args=(xy_p_seg,))
-            # param_ls = param_ls.x
-            
-            # f_delta = param_ls[0:2]
-            # r_ellipse = param_ls[2]
-            
-            # if f_delta[0] < 0:
-            #     f_delta = - f_delta
-            
-            # a = r_ellipse
-            # c = np.linalg.norm(f_delta)
-            # b = np.sqrt(a ** 2 - c ** 2)
-            # theta_ellipse = np.arctan2(f_delta[1], f_delta[0])
-            
-            a, b, theta_ellipse = fit_ellipse_hyper(xy_p_seg)
-        
+            param = np.zeros(3)
+            param[2] = self.r
+            param_ls = optimize.least_squares(fit_ellipse, param, args=(xy_p_seg,))
+            # param_ls = optimize.basinhopping(fit_ellipse, param, minimizer_kwargs={'method': 'L-BFGS-B', 'args': (xy_p_seg,)})
+            param_ls = param_ls.x
+            f_delta = param_ls[0:2]
+            r_ellipse = param_ls[2]
+            if f_delta[0] < 0:
+                f_delta = - f_delta
+            a = r_ellipse
+            c = np.linalg.norm(f_delta)
+            b = np.sqrt(a ** 2 - c ** 2)
+            theta_ellipse = np.arctan2(f_delta[1], f_delta[0])
             theta_seg = np.arctan2(xy_p_seg[:, 1], xy_p_seg[:, 0])
             theta_seg = theta_seg - theta_ellipse
             
@@ -270,88 +263,6 @@ class Ring():
         xyz_p = rotate_xy(xyz_p, - delta_theta)
         
         return xyz_p, d, error, dislocation_all, rotation_all
-            
-    
-    def compute_d_seg_lin(self):
-        
-        if self.d_seg_circle is None:
-            self.compute_d_seg_circle()
-        xyz_p = self.d_seg_circle[0]
-        xy_o_key = self.d_seg_circle[3][0, :]        
-        
-        xyz_p[:, 0:2] = xyz_p[:, 0:2] - xy_o_key
-        
-        param_0 = np.zeros(2)
-        param_1 = np.zeros(2 * self.num_seg)
-        
-        for _ in range(3):
-        
-            bounds = ([- 0.1, - np.pi], [0.1, np.pi])
-        
-            param_0_ls = optimize.least_squares(Ring.fit_0, param_0, bounds=bounds, args=(param_1, self.num_seg, self.r, self.length, self.width, self.angles_b, self.angles_m, self.angles_f, xyz_p, self.label), xtol=None)
-            param_0_ls = param_0_ls.x
-            
-            delta_z = param_0_ls[0]
-            delta_theta = param_0_ls[1]
-        
-            xyz_p[:, 2] = xyz_p[:, 2] + delta_z
-            xyz_p = rotate_xy(xyz_p, delta_theta)
-            # xy_o_key = rotate_xy(xy_o_key.reshape(1, 2), delta_theta)
-            # xyz_p[:, 0:2] = xyz_p[:, 0:2] - xy_o_key
-        
-            lbs = []
-            ubs = []
-            for i in range(self.num_seg):
-                lbs.append(-0.02)
-                ubs.append(0.02)
-            for i in range(self.num_seg):
-                lbs.append(-np.pi / 36)
-                ubs.append(np.pi / 36)
-            bounds = (lbs, ubs)
-        
-            param_1_ls = optimize.least_squares(Ring.fit_1, param_1, bounds=bounds, args=(self.num_seg, self.r, self.length, self.width, self.angles_b, self.angles_m, self.angles_f, xyz_p, self.label))
-            param_1_ls = param_1_ls.x
-            
-            param_0 = param_0_ls
-            param_1 = param_1_ls
-            print(param_1)
-        
-        dislocation_all = param_1_ls[0:self.num_seg]
-        rotation_all = param_1_ls[self.num_seg:2 * self.num_seg]
-        # print(dislocation_all)
-        # print(rotation_all)
-        
-        param_seg_ls = param_1_ls
-        
-        position_all = Ring.compute_seg_position(param_seg_ls, self.num_seg, self.r, self.width, self.angles_m)
-        print(position_all[self.num_seg, 0:2])
-        print(position_all[self.num_seg, 2] / np.pi * 180)
-        # xy_o_all = position_all[:, 0:2]
-        
-        # d = np.zeros(self.xyz.shape[0])
-        # error = np.zeros(self.xyz.shape[0])
-        
-        # for i in range(self.num_seg):
-            
-        #     index = np.where(self.label == i + 1)[0]
-        #     xy_p_seg = xyz_p[index, 0:2]
-        #     xy_p_seg = xy_p_seg - xy_o_all[i]
-        #     theta_seg = np.arctan2(xy_p_seg[:, 1], xy_p_seg[:, 0])
-        #     xy_circle_seg = self.r * np.hstack((np.cos(theta_seg).reshape(-1, 1), np.sin(theta_seg).reshape(-1, 1)))
-            
-        #     error_seg = np.linalg.norm(xy_p_seg, axis=1) - np.linalg.norm(xy_circle_seg, axis=1)
-        #     error[index] = error_seg[:]
-            
-        #     xy_circle_seg = xy_circle_seg + xy_o_all[i] + xy_o_key
-        #     xy_circle_seg = rotate_xy(xy_circle_seg, - delta_theta)
-        #     d_seg = np.linalg.norm(xy_circle_seg, axis=1) - self.r
-        #     d[index] = d_seg[:]
-        
-        # d = d.reshape(-1, 1)
-        # error = error.reshape(-1, 1)
-        
-        # return xyz_p, d, error, dislocation_all, rotation_all
-        return dislocation_all, rotation_all
     
     @staticmethod
     def compute_seg_position(param_seg, num_seg, r, width, angles_m):

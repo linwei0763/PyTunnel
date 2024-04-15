@@ -20,7 +20,7 @@ if __name__ == '__main__':
         # part_stations = ['0-103', '1-1', '3-1', '4-1']
         # part_stations = ['0-0', '0-103']
         # part_stations = ['4-1', '4-2', '4-3']
-        part_stations = ['1-4']
+        part_stations = ['3-1']
     
     voxel_size = 0.04
     max_num = 40960
@@ -153,18 +153,22 @@ if __name__ == '__main__':
             
             ring = Ring(pc[:, 0:3], pc[:, 3], pc[:, 4], r_all[tunnel_no], length_all[tunnel_no], width_all[tunnel_no],  num_seg_all[tunnel_no], angles_b_all[tunnel_no], angles_m_all[tunnel_no], angles_f_all[tunnel_no], v0_dir_all[station])
             
+            # 1
             xyz_p, d, error = ring.compute_d_circle()
             pc = np.hstack((pc, xyz_p, d, error))
+            
+            # 2
             xyz_p, d, error, ovalisation = ring.compute_d_ellipse()
             pc = np.hstack((pc, xyz_p, d, error))
             ovalisation_all.append([file.split('.')[0], ovalisation[0], ovalisation[1], ovalisation[2]])
+            
+            # 3
             xyz_p, d, error = ring.compute_d_seg_circle()
             pc = np.hstack((pc, xyz_p, d, error))
+            
+            # 4
             xyz_p, d, error, dislocation_all, rotation_all = ring.compute_d_seg_ellipse()
             pc = np.hstack((pc, xyz_p, d, error))
-            # xyz_p, d, error, dislocation_all, rotation_all = ring.compute_d_seg_lin()
-            # dislocation_all, rotation_all = ring.compute_d_seg_lin()
-            
             
             dislocation_all_all.append([int(file.split('.')[0].split('-')[0]), int(file.split('.')[0].split('-')[1]), int(file.split('.')[0].split('-')[2])])
             rotation_all_all.append([int(file.split('.')[0].split('-')[0]), int(file.split('.')[0].split('-')[1]), int(file.split('.')[0].split('-')[2])])
