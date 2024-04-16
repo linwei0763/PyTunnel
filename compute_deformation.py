@@ -90,7 +90,6 @@ if __name__ == '__main__':
     fmt +=  ' %.8f %.8f %.8f %.8f %.8f'
     fmt +=  ' %.8f %.8f %.8f %.8f %.8f'
     fmt +=  ' %.8f %.8f %.8f %.8f %.8f'
-    fmt +=  ' %.8f %.8f %.8f %.8f %.8f'
     path_o = 'result'
     
     index_label = 4
@@ -168,12 +167,13 @@ if __name__ == '__main__':
             pc = np.hstack((pc, xyz_p, d, error))
             
             # 4
-            xyz_p, d, error, dislocation_all, rotation_all = ring.compute_d_seg_ellipse()
+            # xyz_p, d, error, dislocation_all, rotation_all = ring.compute_d_seg_ellipse()
+            xyz_p, d, error, dislocation_all, rotation_all = ring.compute_d_seg_fourier()
             pc = np.hstack((pc, xyz_p, d, error))
             
             # 5
-            xyz_p, d, error = ring.compute_d_seg_fourier()
-            pc = np.hstack((pc, xyz_p, d, error))
+            # xyz_p, d, error = ring.compute_d_seg_fourier()
+            # pc = np.hstack((pc, xyz_p, d, error))
             
             dislocation_all_all.append([int(file.split('.')[0].split('-')[0]), int(file.split('.')[0].split('-')[1]), int(file.split('.')[0].split('-')[2])])
             rotation_all_all.append([int(file.split('.')[0].split('-')[0]), int(file.split('.')[0].split('-')[1]), int(file.split('.')[0].split('-')[2])])
