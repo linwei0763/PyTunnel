@@ -179,7 +179,6 @@ class Ring():
             param = np.zeros(3)
             param[2] = self.r
             param_ls = optimize.least_squares(fit_ellipse, param, args=(xy_p_seg,))
-            # param_ls = optimize.basinhopping(fit_ellipse, param, minimizer_kwargs={'method': 'L-BFGS-B', 'args': (xy_p_seg,)})
             param_ls = param_ls.x
             f_delta = param_ls[0:2]
             r_ellipse = param_ls[2]
@@ -348,8 +347,8 @@ class Ring():
             
             dislocation_all[i] = r_joint_last - r_joint_next
             
-            if np.dot(vector_joint_last, vector_joint_next.T) < 0:
-                vector_joint_next = - vector_joint_next
+            # if np.dot(vector_joint_last, vector_joint_next.T) < 0:
+            #     vector_joint_next = - vector_joint_next
             rotation = np.arccos(np.dot(vector_joint_last, vector_joint_next.T))
             if np.cross(vector_joint_last, vector_joint_next) < 0:
                 rotation = - rotation
