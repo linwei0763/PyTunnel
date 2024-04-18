@@ -118,8 +118,7 @@ class Ring():
         error = np.zeros(self.xyz.shape[0])
         
         for i in range(self.num_seg):
-            index = np.where(self.label == i + 1)
-            index = index[0]
+            index = np.where(self.label == i + 1)[0]
             if index.shape[0] == 0:
                 continue
             xy_p_seg = xyz_p[index, 0:2]
@@ -169,8 +168,7 @@ class Ring():
         ovalisation_seg_all = []            
         
         for i in range(self.num_seg):
-            index = np.where(self.label == i + 1)
-            index = index[0]
+            index = np.where(self.label == i + 1)[0]
             if index.shape[0] == 0:
                 ovalisation_seg_all.append(np.full(3, np.nan))
                 continue
@@ -289,15 +287,17 @@ class Ring():
         k = 6
         
         for i in range(self.num_seg):
-            index = np.where(self.label == i + 1)
-            index = index[0]
+            index = np.where(self.label == i + 1)[0]
             if index.shape[0] == 0:
                 fourier_seg_all.append(np.full(2 * k + 1, np.nan))
                 continue
-            xy_p_seg = xyz_p[index, 0:2]
+            xyz_p_seg = xyz_p[index, 0:3]
+            xy_p_seg = xyz_p_seg[:, 0:2]
+            index_middle = np.where((xyz_p_seg[:, 2] < self.length / 8) & (xyz_p_seg[:, 2] > - self.length / 8))[0]
+            xy_p_seg_middle = xyz_p_seg[index_middle, 0:2]     
             
             param = np.zeros(2 * k + 1)
-            param_ls = optimize.least_squares(fit_fourier, param, args=(xy_p_seg, k))
+            param_ls = optimize.least_squares(fit_fourier, param, args=(xy_p_seg_middle, k))
             param_ls = param_ls.x
             fourier_seg_all.append(param_ls)
             
