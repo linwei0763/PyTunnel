@@ -284,7 +284,7 @@ class Ring():
         
         fourier_seg_all = []
         
-        k_fourier = 2
+        k_fourier = 4
         r_length = 2
         
         for i in range(self.num_seg):
