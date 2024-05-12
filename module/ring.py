@@ -284,8 +284,8 @@ class Ring():
         
         fourier_seg_all = []
         
-        k_fourier = 4
-        r_length = 2
+        k_fourier = 8
+        r_length = 4
         
         for i in range(self.num_seg):
             index = np.where(self.label == i + 1)[0]
@@ -348,8 +348,8 @@ class Ring():
             
             dislocation_all[i] = r_joint_last - r_joint_next
             
-            # if np.dot(vector_joint_last, vector_joint_next.T) < 0:
-            #     vector_joint_next = - vector_joint_next
+            if np.dot(vector_joint_last, vector_joint_next.T) < 0:
+                vector_joint_next = - vector_joint_next
             rotation = np.arccos(np.dot(vector_joint_last, vector_joint_next.T))
             if np.cross(vector_joint_last, vector_joint_next) < 0:
                 rotation = - rotation
@@ -363,9 +363,33 @@ class Ring():
         d = d.reshape(-1, 1)
         error = error.reshape(-1, 1)
         
+        xy_p_fourier_all = []
+        theta_seg_m = np.pi
+        
+        for i in range(self.num_seg):
+            
+            theta_joints = [theta_seg_m + self.angles_m[i][1], theta_seg_m + self.angles_m[i][0]]
+            
+            param_fourier = fourier_seg_all[i, :]
+            
+            for theta_per in np.arange(theta_joints[0], theta_joints[1], step=np.pi/1800):
+                r_per = param_fourier[-1]
+                for j in range(k_fourier):
+                    r_per += param_fourier[j] * np.cos((j + 1) * theta_per) + param_fourier[k_fourier + j] * np.sin((j + 1) * theta_per)
+                xy_p_fourier_all.append([r_per * np.cos(theta_per), r_per * np.sin(theta_per), i + 1])
+                
+            theta_seg_m += self.angles_m[i][1]
+            if i == self.num_seg - 1:
+                theta_seg_m -= self.angles_m[0][0]
+            else:
+                theta_seg_m -= self.angles_m[i + 1][0]
+        
+        xy_p_fourier_all = np.asarray(xy_p_fourier_all)
+        xy_p_norm_all = np.hstack((xyz_p[:, 0:2], self.label.reshape(-1, 1)))
+        
         xyz_p = rotate_xy(xyz_p, - delta_theta)
         
-        return xyz_p, d, error, dislocation_all, rotation_all
+        return xyz_p, d, error, dislocation_all, rotation_all, xy_p_norm_all, xy_p_fourier_all
     
     
     @staticmethod
