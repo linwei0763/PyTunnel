@@ -298,7 +298,8 @@ class Ring():
             xy_p_seg_middle = xyz_p_seg[index_middle, 0:2]     
             
             param = np.zeros(2 * k_fourier + 1)
-            param_ls = optimize.least_squares(fit_fourier, param, args=(xy_p_seg_middle, k_fourier))
+            param[-1] = self.r
+            param_ls = optimize.least_squares(fit_fourier, param, args=(xy_p_seg_middle, k_fourier, self.r))
             param_ls = param_ls.x
             fourier_seg_all.append(param_ls)
             
@@ -386,6 +387,18 @@ class Ring():
         
         xy_p_fourier_all = np.asarray(xy_p_fourier_all)
         xy_p_norm_all = np.hstack((xyz_p[:, 0:2], self.label.reshape(-1, 1)))
+        
+        xy_p_fourier_all_10 = copy.deepcopy(xy_p_fourier_all)
+        d_fourier_all_10 = np.linalg.norm(xy_p_fourier_all_10[:, 0:2], axis=1)
+        xy_p_fourier_all_10[:, 0] = ((d_fourier_all_10 - self.r) * 10 + self.r) * xy_p_fourier_all_10[:, 0] / d_fourier_all_10
+        xy_p_fourier_all_10[:, 1] = ((d_fourier_all_10 - self.r) * 10 + self.r) * xy_p_fourier_all_10[:, 1] / d_fourier_all_10
+        xy_p_fourier_all = np.hstack((xy_p_fourier_all, xy_p_fourier_all_10))
+        
+        xy_p_norm_all_10 = copy.deepcopy(xy_p_norm_all)
+        d_norm_all_10 = np.linalg.norm(xy_p_norm_all_10[:, 0:2], axis=1)
+        xy_p_norm_all_10[:, 0] = ((d_norm_all_10 - self.r) * 10 + self.r) * xy_p_norm_all_10[:, 0] / d_norm_all_10
+        xy_p_norm_all_10[:, 1] = ((d_norm_all_10 - self.r) * 10 + self.r) * xy_p_norm_all_10[:, 1] / d_norm_all_10
+        xy_p_norm_all = np.hstack((xy_p_norm_all, xy_p_norm_all_10))
         
         xyz_p = rotate_xy(xyz_p, - delta_theta)
         

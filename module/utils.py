@@ -76,9 +76,9 @@ def fit_ellipse_v(param, xyz):
     return d
 
 
-def fit_fourier(param, xy_p, k):
+def fit_fourier(param, xy_p, k, r):
     
-    param_0 = param[2 * k]
+    param_0 = r
     param_1 = param[0:k]
     param_2 = param[k:2 * k]
     
