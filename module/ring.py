@@ -2,7 +2,7 @@ import copy
 import numpy as np
 from scipy import optimize
 
-from module.utils import compute_normal, fit_circle, fit_circle_v, fit_ellipse, fit_ellipse_v, fit_fourier, project2plane, rotate_xy, solve_contradiction
+from module.utils import compute_normal, fit_circle, fit_circle_v, fit_ellipse, fit_ellipse_v, fit_fourier, fit_polynomial, project2plane, rotate_xy, solve_contradiction
 
 
 class Ring():
@@ -284,14 +284,24 @@ class Ring():
         
         fourier_seg_all = []
         
-        k_fourier = 8
+        k_fourier = 16
         r_length = 4
         
+        theta_seg_m = np.pi
+        
         for i in range(self.num_seg):
+            
             index = np.where(self.label == i + 1)[0]
+            
             if index.shape[0] == 0:
                 fourier_seg_all.append(np.full(2 * k_fourier + 1, np.nan))
+                theta_seg_m += self.angles_m[i][1]
+                if i == self.num_seg - 1:
+                    theta_seg_m -= self.angles_m[0][0]
+                else:
+                    theta_seg_m -= self.angles_m[i + 1][0]
                 continue
+            
             xyz_p_seg = xyz_p[index, 0:3]
             xy_p_seg = xyz_p_seg[:, 0:2]
             index_middle = np.where((xyz_p_seg[:, 2] < self.length / r_length) & (xyz_p_seg[:, 2] > - self.length / r_length))[0]
@@ -299,17 +309,24 @@ class Ring():
             
             param = np.zeros(2 * k_fourier + 1)
             param[-1] = self.r
-            param_ls = optimize.least_squares(fit_fourier, param, args=(xy_p_seg_middle, k_fourier, self.r))
+            param_ls = optimize.least_squares(fit_fourier, param, loss='soft_l1', f_scale=0.001, args=(k_fourier, xy_p_seg_middle, self.r, theta_seg_m))
             param_ls = param_ls.x
+            param_ls[-1] = self.r
             fourier_seg_all.append(param_ls)
             
             theta_seg = np.arctan2(xy_p_seg[:, 1], xy_p_seg[:, 0])
             
             d[index] = param_ls[-1]
             for j in range(k_fourier):
-                d[index] += param_ls[j] * np.cos((j + 1) * theta_seg) + param_ls[k_fourier + j] * np.sin((j + 1) * theta_seg)
+                d[index] += param_ls[j] * np.cos((j + 1) * (theta_seg - theta_seg_m)) + param_ls[k_fourier + j] * np.sin((j + 1) * (theta_seg - theta_seg_m))
             error[index] = np.linalg.norm(xy_p_seg, axis=1) - d[index]
-            d[index] = d[index] - self.r            
+            d[index] = d[index] - self.r
+            
+            theta_seg_m += self.angles_m[i][1]
+            if i == self.num_seg - 1:
+                theta_seg_m -= self.angles_m[0][0]
+            else:
+                theta_seg_m -= self.angles_m[i + 1][0]
         
         fourier_seg_all = np.asarray(fourier_seg_all)
         
@@ -317,6 +334,7 @@ class Ring():
         rotation_all = np.zeros(self.num_seg)
         
         theta_joint = np.pi
+        theta_seg_m = np.pi
         
         for i in range(self.num_seg):
             
@@ -326,11 +344,11 @@ class Ring():
             
             r_joint_last = param_last[-1]
             for j in range(k_fourier):
-                r_joint_last += param_last[j] * np.cos((j + 1) * theta_joint) + param_last[k_fourier + j] * np.sin((j + 1) * theta_joint)
+                r_joint_last += param_last[j] * np.cos((j + 1) * (theta_joint - theta_seg_m)) + param_last[k_fourier + j] * np.sin((j + 1) * (theta_joint - theta_seg_m))
             vector_joint_last = np.asarray([- np.sin(theta_joint) * r_joint_last, np.cos(theta_joint) * r_joint_last])
             for j in range(k_fourier):
-                vector_joint_last[0] += np.cos(theta_joint) * (- param_last[j] * (j + 1) * np.sin((j + 1) * theta_joint) + param_last[k_fourier + j] * (j + 1) * np.cos((j + 1) * theta_joint))
-                vector_joint_last[1] += np.sin(theta_joint) * (- param_last[j] * (j + 1) * np.sin((j + 1) * theta_joint) + param_last[k_fourier + j] * (j + 1) * np.cos((j + 1) * theta_joint))
+                vector_joint_last[0] += np.cos(theta_joint) * (- param_last[j] * (j + 1) * np.sin((j + 1) * (theta_joint - theta_seg_m)) + param_last[k_fourier + j] * (j + 1) * np.cos((j + 1) * (theta_joint - theta_seg_m)))
+                vector_joint_last[1] += np.sin(theta_joint) * (- param_last[j] * (j + 1) * np.sin((j + 1) * (theta_joint - theta_seg_m)) + param_last[k_fourier + j] * (j + 1) * np.cos((j + 1) * (theta_joint - theta_seg_m)))
             vector_joint_last = vector_joint_last / np.linalg.norm(vector_joint_last)
             
             if i == self.num_seg - 1:
@@ -340,11 +358,11 @@ class Ring():
             
             r_joint_next = param_next[-1]
             for j in range(k_fourier):
-                r_joint_next += param_next[j] * np.cos((j + 1) * theta_joint) + param_next[k_fourier + j] * np.sin((j + 1) * theta_joint)
+                r_joint_next += param_next[j] * np.cos((j + 1) * (theta_joint - theta_seg_m)) + param_next[k_fourier + j] * np.sin((j + 1) * (theta_joint - theta_seg_m))
             vector_joint_next = np.asarray([- np.sin(theta_joint) * r_joint_next, np.cos(theta_joint) * r_joint_next])
             for j in range(k_fourier):
-                vector_joint_next[0] += np.cos(theta_joint) * (- param_next[j] * (j + 1) * np.sin((j + 1) * theta_joint) + param_next[k_fourier + j] * (j + 1) * np.cos((j + 1) * theta_joint))
-                vector_joint_next[1] += np.sin(theta_joint) * (- param_next[j] * (j + 1) * np.sin((j + 1) * theta_joint) + param_next[k_fourier + j] * (j + 1) * np.cos((j + 1) * theta_joint))
+                vector_joint_next[0] += np.cos(theta_joint) * (- param_next[j] * (j + 1) * np.sin((j + 1) * (theta_joint - theta_seg_m)) + param_next[k_fourier + j] * (j + 1) * np.cos((j + 1) * (theta_joint - theta_seg_m)))
+                vector_joint_next[1] += np.sin(theta_joint) * (- param_next[j] * (j + 1) * np.sin((j + 1) * (theta_joint - theta_seg_m)) + param_next[k_fourier + j] * (j + 1) * np.cos((j + 1) * (theta_joint - theta_seg_m)))
             vector_joint_next = vector_joint_next / np.linalg.norm(vector_joint_next)
             
             dislocation_all[i] = r_joint_last - r_joint_next
@@ -360,6 +378,12 @@ class Ring():
                 theta_joint = theta_joint - self.angles_m[0][0]
             else:
                 theta_joint = theta_joint - self.angles_m[i + 1][0]
+                
+            theta_seg_m += self.angles_m[i][1]
+            if i == self.num_seg - 1:
+                theta_seg_m -= self.angles_m[0][0]
+            else:
+                theta_seg_m -= self.angles_m[i + 1][0]
 
         d = d.reshape(-1, 1)
         error = error.reshape(-1, 1)
@@ -376,7 +400,7 @@ class Ring():
             for theta_per in np.arange(theta_joints[0], theta_joints[1], step=np.pi/1800):
                 r_per = param_fourier[-1]
                 for j in range(k_fourier):
-                    r_per += param_fourier[j] * np.cos((j + 1) * theta_per) + param_fourier[k_fourier + j] * np.sin((j + 1) * theta_per)
+                    r_per += param_fourier[j] * np.cos((j + 1) * (theta_per - theta_seg_m)) + param_fourier[k_fourier + j] * np.sin((j + 1) * (theta_per - theta_seg_m))
                 xy_p_fourier_all.append([r_per * np.cos(theta_per), r_per * np.sin(theta_per), i + 1])
                 
             theta_seg_m += self.angles_m[i][1]
@@ -403,6 +427,174 @@ class Ring():
         xyz_p = rotate_xy(xyz_p, - delta_theta)
         
         return xyz_p, d, error, dislocation_all, rotation_all, xy_p_norm_all, xy_p_fourier_all
+
+
+    def compute_d_seg_polynomial(self):
+        
+        if self.d_seg_circle is None:
+            self.compute_d_seg_circle()
+        xyz_p = self.d_seg_circle[0]
+        
+        param_0 = np.zeros(2)
+        bounds_0 = ([- 0.1, - np.pi], [0.1, np.pi])
+        param_1 = np.zeros(2 * self.num_seg)
+        param_0_ls = optimize.least_squares(Ring.fit_0, param_0, bounds=bounds_0, args=(param_1, self.num_seg, self.r, self.length, self.width, self.angles_b, self.angles_m, self.angles_f, xyz_p, self.label))
+        param_0_ls = param_0_ls.x
+        
+        delta_z = param_0_ls[0]
+        delta_theta = param_0_ls[1]
+        
+        xyz_p[:, 2] = xyz_p[:, 2] + delta_z
+        xyz_p = rotate_xy(xyz_p, delta_theta)
+        
+        d = np.zeros(self.num_point)
+        error = np.zeros(self.num_point)
+        
+        polynomial_seg_all = []
+        
+        k_polynomial = 4
+        r_length = 4
+        
+        theta_seg_m = np.pi
+        
+        for i in range(self.num_seg):
+            
+            index = np.where(self.label == i + 1)[0]
+            
+            if index.shape[0] == 0:
+                polynomial_seg_all.append(np.full(k_polynomial + 1, np.nan))
+                # theta_seg_m += self.angles_m[i][1]
+                # if i == self.num_seg - 1:
+                #     theta_seg_m -= self.angles_m[0][0]
+                # else:
+                #     theta_seg_m -= self.angles_m[i + 1][0]
+                continue
+            
+            xyz_p_seg = xyz_p[index, 0:3]
+            xy_p_seg = xyz_p_seg[:, 0:2]
+            index_middle = np.where((xyz_p_seg[:, 2] < self.length / r_length) & (xyz_p_seg[:, 2] > - self.length / r_length))[0]
+            xy_p_seg_middle = xyz_p_seg[index_middle, 0:2]
+            
+            param = np.zeros(k_polynomial + 1)
+            param[0] = self.r
+            param_ls = optimize.least_squares(fit_polynomial, param, loss='soft_l1', f_scale=0.1, args=(k_polynomial, xy_p_seg_middle))
+            param_ls = param_ls.x
+            polynomial_seg_all.append(param_ls)
+            
+            theta_seg = np.arctan2(xy_p_seg[:, 1], xy_p_seg[:, 0])
+            
+            d[index] = param_ls[0]
+            for j in range(k_polynomial):
+                d[index] += param_ls[j + 1] * (theta_seg ** (j + 1))
+            error[index] = np.linalg.norm(xy_p_seg, axis=1) - d[index]
+            d[index] = d[index] - self.r
+            
+            # theta_seg_m += self.angles_m[i][1]
+            # if i == self.num_seg - 1:
+            #     theta_seg_m -= self.angles_m[0][0]
+            # else:
+            #     theta_seg_m -= self.angles_m[i + 1][0]
+        
+        polynomial_seg_all = np.asarray(polynomial_seg_all)
+        
+        # dislocation_all = np.zeros(self.num_seg)
+        # rotation_all = np.zeros(self.num_seg)
+        
+        # theta_joint = np.pi
+        # theta_seg_m = np.pi
+        
+        # for i in range(self.num_seg):
+            
+        #     theta_joint += self.angles_m[i][1]
+            
+        #     param_last = fourier_seg_all[i, :]
+            
+        #     r_joint_last = param_last[-1]
+        #     for j in range(k_fourier):
+        #         r_joint_last += param_last[j] * np.cos((j + 1) * (theta_joint - theta_seg_m)) + param_last[k_fourier + j] * np.sin((j + 1) * (theta_joint - theta_seg_m))
+        #     vector_joint_last = np.asarray([- np.sin(theta_joint) * r_joint_last, np.cos(theta_joint) * r_joint_last])
+        #     for j in range(k_fourier):
+        #         vector_joint_last[0] += np.cos(theta_joint) * (- param_last[j] * (j + 1) * np.sin((j + 1) * (theta_joint - theta_seg_m)) + param_last[k_fourier + j] * (j + 1) * np.cos((j + 1) * (theta_joint - theta_seg_m)))
+        #         vector_joint_last[1] += np.sin(theta_joint) * (- param_last[j] * (j + 1) * np.sin((j + 1) * (theta_joint - theta_seg_m)) + param_last[k_fourier + j] * (j + 1) * np.cos((j + 1) * (theta_joint - theta_seg_m)))
+        #     vector_joint_last = vector_joint_last / np.linalg.norm(vector_joint_last)
+            
+        #     if i == self.num_seg - 1:
+        #         param_next = fourier_seg_all[0, :]
+        #     else:
+        #         param_next = fourier_seg_all[i + 1, :]
+            
+        #     r_joint_next = param_next[-1]
+        #     for j in range(k_fourier):
+        #         r_joint_next += param_next[j] * np.cos((j + 1) * (theta_joint - theta_seg_m)) + param_next[k_fourier + j] * np.sin((j + 1) * (theta_joint - theta_seg_m))
+        #     vector_joint_next = np.asarray([- np.sin(theta_joint) * r_joint_next, np.cos(theta_joint) * r_joint_next])
+        #     for j in range(k_fourier):
+        #         vector_joint_next[0] += np.cos(theta_joint) * (- param_next[j] * (j + 1) * np.sin((j + 1) * (theta_joint - theta_seg_m)) + param_next[k_fourier + j] * (j + 1) * np.cos((j + 1) * (theta_joint - theta_seg_m)))
+        #         vector_joint_next[1] += np.sin(theta_joint) * (- param_next[j] * (j + 1) * np.sin((j + 1) * (theta_joint - theta_seg_m)) + param_next[k_fourier + j] * (j + 1) * np.cos((j + 1) * (theta_joint - theta_seg_m)))
+        #     vector_joint_next = vector_joint_next / np.linalg.norm(vector_joint_next)
+            
+        #     dislocation_all[i] = r_joint_last - r_joint_next
+            
+        #     if np.dot(vector_joint_last, vector_joint_next.T) < 0:
+        #         vector_joint_next = - vector_joint_next
+        #     rotation = np.arccos(np.dot(vector_joint_last, vector_joint_next.T))
+        #     if np.cross(vector_joint_last, vector_joint_next) < 0:
+        #         rotation = - rotation
+        #     rotation_all[i] = rotation
+            
+        #     if i == self.num_seg - 1:
+        #         theta_joint = theta_joint - self.angles_m[0][0]
+        #     else:
+        #         theta_joint = theta_joint - self.angles_m[i + 1][0]
+                
+        #     theta_seg_m += self.angles_m[i][1]
+        #     if i == self.num_seg - 1:
+        #         theta_seg_m -= self.angles_m[0][0]
+        #     else:
+        #         theta_seg_m -= self.angles_m[i + 1][0]
+
+        d = d.reshape(-1, 1)
+        error = error.reshape(-1, 1)
+        
+        xy_p_polynomial_all = []
+        theta_seg_m = np.pi
+        
+        for i in range(self.num_seg):
+            
+            theta_joints = [theta_seg_m + self.angles_m[i][1], theta_seg_m + self.angles_m[i][0]]
+            
+            param_polynomial = polynomial_seg_all[i, :]
+            
+            for theta_per in np.arange(theta_joints[0], theta_joints[1], step=np.pi/1800):
+                r_per = param_polynomial[0]
+                for j in range(k_polynomial):
+                    r_per += param_polynomial[j + 1] * (theta_per ** (j + 1))
+                xy_p_polynomial_all.append([r_per * np.cos(theta_per), r_per * np.sin(theta_per), i + 1])
+                
+            theta_seg_m += self.angles_m[i][1]
+            if i == self.num_seg - 1:
+                theta_seg_m -= self.angles_m[0][0]
+            else:
+                theta_seg_m -= self.angles_m[i + 1][0]
+        
+        xy_p_polynomial_all = np.asarray(xy_p_polynomial_all)
+        xy_p_norm_all = np.hstack((xyz_p[:, 0:2], self.label.reshape(-1, 1)))
+        
+        xy_p_polynomial_all_10 = copy.deepcopy(xy_p_polynomial_all)
+        d_polynomial_all_10 = np.linalg.norm(xy_p_polynomial_all_10[:, 0:2], axis=1)
+        xy_p_polynomial_all_10[:, 0] = ((d_polynomial_all_10 - self.r) * 10 + self.r) * xy_p_polynomial_all_10[:, 0] / d_polynomial_all_10
+        xy_p_polynomial_all_10[:, 1] = ((d_polynomial_all_10 - self.r) * 10 + self.r) * xy_p_polynomial_all_10[:, 1] / d_polynomial_all_10
+        xy_p_polynomial_all = np.hstack((xy_p_polynomial_all, xy_p_polynomial_all_10))
+        
+        xy_p_norm_all_10 = copy.deepcopy(xy_p_norm_all)
+        d_norm_all_10 = np.linalg.norm(xy_p_norm_all_10[:, 0:2], axis=1)
+        xy_p_norm_all_10[:, 0] = ((d_norm_all_10 - self.r) * 10 + self.r) * xy_p_norm_all_10[:, 0] / d_norm_all_10
+        xy_p_norm_all_10[:, 1] = ((d_norm_all_10 - self.r) * 10 + self.r) * xy_p_norm_all_10[:, 1] / d_norm_all_10
+        xy_p_norm_all = np.hstack((xy_p_norm_all, xy_p_norm_all_10))
+        
+        xyz_p = rotate_xy(xyz_p, - delta_theta)
+        
+        return xyz_p, d, error, xy_p_norm_all, xy_p_polynomial_all
+
     
     
     @staticmethod
