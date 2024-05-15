@@ -108,6 +108,19 @@ def fit_polynomial(param, k, xy_p):
     return d
 
 
+def fit_polynomial_residual(param, k, theta, residual):
+    
+    d = np.zeros(theta.shape[0])
+    d[:] = param[0]
+    
+    for i in range(k):
+        d += param[i + 1] * (theta ** (i + 1))
+    
+    d = residual - d
+    
+    return d
+
+
 def grid_sample(points, voxel_size):
     
     features = points[:, 3:]

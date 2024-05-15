@@ -2,7 +2,7 @@ import copy
 import numpy as np
 from scipy import optimize
 
-from module.utils import compute_normal, fit_circle, fit_circle_v, fit_ellipse, fit_ellipse_v, fit_fourier, fit_polynomial, project2plane, rotate_xy, solve_contradiction
+from module.utils import compute_normal, fit_circle, fit_circle_v, fit_ellipse, fit_ellipse_v, fit_fourier, fit_polynomial, fit_polynomial_residual, project2plane, rotate_xy, solve_contradiction
 
 
 class Ring():
@@ -261,6 +261,169 @@ class Ring():
         return xyz_p, d, error, dislocation_all, rotation_all
     
     
+    def compute_d_seg_ellipse_polynomial(self):
+        
+        if self.d_seg_circle is None:
+            self.compute_d_seg_circle()
+        xyz_p = self.d_seg_circle[0]
+        
+        param_0 = np.zeros(2)
+        bounds_0 = ([- 0.1, - np.pi], [0.1, np.pi])
+        param_1 = np.zeros(2 * self.num_seg)
+        param_0_ls = optimize.least_squares(Ring.fit_0, param_0, bounds=bounds_0, args=(param_1, self.num_seg, self.r, self.length, self.width, self.angles_b, self.angles_m, self.angles_f, xyz_p, self.label))
+        param_0_ls = param_0_ls.x
+        
+        delta_z = param_0_ls[0]
+        delta_theta = param_0_ls[1]
+        
+        xyz_p[:, 2] = xyz_p[:, 2] + delta_z
+        xyz_p = rotate_xy(xyz_p, delta_theta)
+        
+        d = np.zeros(self.num_point)
+        error = np.zeros(self.num_point)
+        
+        ovalisation_seg_all = []
+        
+        polynomial_seg_all = []
+        
+        k_polynomial = 3
+        r_length = 4
+        
+        for i in range(self.num_seg):
+            
+            index = np.where(self.label == i + 1)[0]
+            
+            if index.shape[0] < 12:
+                ovalisation_seg_all.append(np.full(3, np.nan))
+                polynomial_seg_all.append(np.full(k_polynomial + 1, np.nan))
+                continue
+            
+            xyz_p_seg = xyz_p[index, 0:3]
+            xy_p_seg = xyz_p_seg[:, 0:2]
+            index_middle = np.where((xyz_p_seg[:, 2] < self.length / r_length) & (xyz_p_seg[:, 2] > - self.length / r_length))[0]
+            xy_p_seg_middle = xyz_p_seg[index_middle, 0:2]
+            
+            param = np.zeros(3)
+            param[2] = self.r
+            param_ls = optimize.least_squares(fit_ellipse, param, xtol=None, gtol=None, loss='cauchy', f_scale=0.001, args=(xy_p_seg_middle,))
+            param_ls = param_ls.x
+            print(param_ls)
+            
+            f_delta = param_ls[0:2]
+            r_ellipse = param_ls[2]
+            if f_delta[0] < 0:
+                f_delta = - f_delta
+            a = r_ellipse
+            c = np.linalg.norm(f_delta)
+            b = np.sqrt(a ** 2 - c ** 2)
+            theta_ellipse = np.arctan2(f_delta[1], f_delta[0])
+            
+            theta_seg_middle = np.arctan2(xy_p_seg_middle[:, 1], xy_p_seg_middle[:, 0])
+            theta_seg_middle = theta_seg_middle - theta_ellipse
+            
+            x_seg_middle_ellipse = a * np.cos(theta_seg_middle)
+            y_seg_middle_ellipse = b * np.sin(theta_seg_middle)
+            xy_seg_middle_ellipse = np.hstack((x_seg_middle_ellipse.reshape(-1, 1), y_seg_middle_ellipse.reshape(-1, 1)))
+            xy_seg_middle_ellipse = rotate_xy(xy_seg_middle_ellipse, theta_ellipse)
+            
+            theta_seg_middle = theta_seg_middle + theta_ellipse
+            
+            residual = np.linalg.norm(xy_p_seg_middle, axis=1) - np.linalg.norm(xy_seg_middle_ellipse, axis=1)
+            # x_residual = residual * np.cos(theta_seg_middle)
+            # y_residual = residual * np.sin(theta_seg_middle)
+            # xy_residual = np.hstack((x_residual.reshape(-1, 1), y_residual.reshape(-1, 1)))
+            
+            if i == 0:
+                theta_seg_middle = theta_seg_middle * 5
+            
+            param = np.zeros(k_polynomial + 1)
+            param_ls = optimize.least_squares(fit_polynomial_residual, param, xtol=None, gtol=None, loss='cauchy', f_scale=0.001, args=(k_polynomial, theta_seg_middle, residual))
+            param_ls = param_ls.x
+            print(param_ls)
+            
+            if i == 0:
+                theta_seg_middle = theta_seg_middle / 5
+            
+            ovalisation_seg_all.append([a, b, theta_ellipse])
+            polynomial_seg_all.append(param_ls)            
+            
+            theta_seg = np.arctan2(xy_p_seg[:, 1], xy_p_seg[:, 0])
+            theta_seg = theta_seg - theta_ellipse
+            x_seg_ellipse = a * np.cos(theta_seg)
+            y_seg_ellipse = b * np.sin(theta_seg)
+            xy_seg_ellipse = np.hstack((x_seg_ellipse.reshape(-1, 1), y_seg_ellipse.reshape(-1, 1)))
+            xy_seg_ellipse = rotate_xy(xy_seg_ellipse, theta_ellipse)
+            theta_seg = theta_seg + theta_ellipse
+            d[index] = np.linalg.norm(xy_seg_ellipse, axis=1)
+            d[index] += param_ls[0]
+            for j in range(k_polynomial):
+                d[index] += param_ls[j + 1] * (theta_seg ** (j + 1))
+            error[index] = np.linalg.norm(xy_p_seg, axis=1) - d[index]
+            d[index] = d[index] - self.r
+        
+        ovalisation_seg_all = np.asarray(ovalisation_seg_all)
+        polynomial_seg_all = np.asarray(polynomial_seg_all)
+
+        d = d.reshape(-1, 1)
+        error = error.reshape(-1, 1)
+        
+        xy_p_ellipse_polynomial_all = []
+        
+        theta_seg_m = np.pi
+        
+        for i in range(self.num_seg):
+            
+            theta_joints = [theta_seg_m + self.angles_m[i][1], theta_seg_m + self.angles_m[i][0]]
+            
+            param_ellipse = ovalisation_seg_all[i, :]
+            param_polynomial = polynomial_seg_all[i, :]
+            
+            for theta_per in np.arange(theta_joints[0], theta_joints[1], step=np.pi/1800):
+                
+                theta_per = theta_per - param_ellipse[2]
+                xy_per = np.asarray([param_ellipse[0] * np.cos(theta_per), param_ellipse[1] * np.sin(theta_per)]).reshape(1, 2)
+                xy_per = rotate_xy(xy_per, param_ellipse[2]).reshape(2)
+                theta_per = theta_per + param_ellipse[2]
+                
+                if i == 0:
+                    theta_per = theta_per * 5
+                
+                r_per = param_polynomial[0]
+                for j in range(k_polynomial):
+                    r_per += param_polynomial[j + 1] * (theta_per ** (j + 1))
+                
+                if i == 0:
+                    theta_per = theta_per / 5
+                
+                xy_per += np.asarray([r_per * np.cos(theta_per), r_per * np.sin(theta_per)])
+                xy_p_ellipse_polynomial_all.append([xy_per[0], xy_per[1], i + 1])
+                
+            theta_seg_m += self.angles_m[i][1]
+            if i == self.num_seg - 1:
+                theta_seg_m -= self.angles_m[0][0]
+            else:
+                theta_seg_m -= self.angles_m[i + 1][0]
+        
+        xy_p_ellipse_polynomial_all = np.asarray(xy_p_ellipse_polynomial_all)
+        xy_p_norm_all = np.hstack((xyz_p[:, 0:2], self.label.reshape(-1, 1)))
+        
+        xy_p_ellipse_polynomial_all_10 = copy.deepcopy(xy_p_ellipse_polynomial_all)
+        d_ellipse_polynomial_all_10 = np.linalg.norm(xy_p_ellipse_polynomial_all_10[:, 0:2], axis=1)
+        xy_p_ellipse_polynomial_all_10[:, 0] = ((d_ellipse_polynomial_all_10 - self.r) * 10 + self.r) * xy_p_ellipse_polynomial_all[:, 0] / d_ellipse_polynomial_all_10
+        xy_p_ellipse_polynomial_all_10[:, 1] = ((d_ellipse_polynomial_all_10 - self.r) * 10 + self.r) * xy_p_ellipse_polynomial_all[:, 1] / d_ellipse_polynomial_all_10
+        xy_p_ellipse_polynomial_all = np.hstack((xy_p_ellipse_polynomial_all, xy_p_ellipse_polynomial_all_10))
+        
+        xy_p_norm_all_10 = copy.deepcopy(xy_p_norm_all)
+        d_norm_all_10 = np.linalg.norm(xy_p_norm_all_10[:, 0:2], axis=1)
+        xy_p_norm_all_10[:, 0] = ((d_norm_all_10 - self.r) * 10 + self.r) * xy_p_norm_all_10[:, 0] / d_norm_all_10
+        xy_p_norm_all_10[:, 1] = ((d_norm_all_10 - self.r) * 10 + self.r) * xy_p_norm_all_10[:, 1] / d_norm_all_10
+        xy_p_norm_all = np.hstack((xy_p_norm_all, xy_p_norm_all_10))
+        
+        xyz_p = rotate_xy(xyz_p, - delta_theta)
+        
+        return xyz_p, d, error, xy_p_norm_all, xy_p_ellipse_polynomial_all
+    
+    
     def compute_d_seg_fourier(self):
         
         if self.d_seg_circle is None:
@@ -477,7 +640,8 @@ class Ring():
             
             param = np.zeros(k_polynomial + 1)
             param[0] = self.r
-            param_ls = optimize.least_squares(fit_polynomial, param, loss='soft_l1', f_scale=0.1, args=(k_polynomial, xy_p_seg_middle))
+            param_ls = optimize.least_squares(fit_polynomial, param, xtol=None, gtol=None, loss='solf_l1', f_scale=0.01, args=(k_polynomial, xy_p_seg_middle))
+            print(param_ls.message)
             param_ls = param_ls.x
             polynomial_seg_all.append(param_ls)
             

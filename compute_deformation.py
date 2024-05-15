@@ -178,7 +178,9 @@ if __name__ == '__main__':
             # 5
             # xyz_p, d, error, dislocation_all, rotation_all, xy_p_norm_all, xy_p_fourier_all = ring.compute_d_seg_fourier()
             # pc = np.hstack((pc, xyz_p, d, error))
-            xyz_p, d, error, xy_p_norm_all, xy_p_polynomial_all = ring.compute_d_seg_polynomial()
+            # xyz_p, d, error, xy_p_norm_all, xy_p_polynomial_all = ring.compute_d_seg_polynomial()
+            # pc = np.hstack((pc, xyz_p, d, error))
+            xyz_p, d, error, xy_p_norm_all, xy_p_ellipse_polynomial_all = ring.compute_d_seg_ellipse_polynomial()
             pc = np.hstack((pc, xyz_p, d, error))
             
             # dislocation_all_all.append([int(file.split('.')[0].split('-')[0]), int(file.split('.')[0].split('-')[1]), int(file.split('.')[0].split('-')[2])])
@@ -191,8 +193,10 @@ if __name__ == '__main__':
             xy_p_norm_all.to_excel(os.path.join(path_o, file.split('.')[0] + '-norm.xlsx'), header=False, index=False)
             # xy_p_fourier_all = pd.DataFrame(xy_p_fourier_all)
             # xy_p_fourier_all.to_excel(os.path.join(path_o, file.split('.')[0] + '-fourier.xlsx'), header=False, index=False)
-            xy_p_polynomial_all = pd.DataFrame(xy_p_polynomial_all)
-            xy_p_polynomial_all.to_excel(os.path.join(path_o, file.split('.')[0] + '-polynomial.xlsx'), header=False, index=False)
+            # xy_p_polynomial_all = pd.DataFrame(xy_p_polynomial_all)
+            # xy_p_polynomial_all.to_excel(os.path.join(path_o, file.split('.')[0] + '-polynomial.xlsx'), header=False, index=False)
+            xy_p_ellipse_polynomial_all = pd.DataFrame(xy_p_ellipse_polynomial_all)
+            xy_p_ellipse_polynomial_all.to_excel(os.path.join(path_o, file.split('.')[0] + '-ellipse-polynomial.xlsx'), header=False, index=False)
             
             if flag_trans_yz[tunnel_no]:
                 pc[:, 0]= - pc[:, 0]
