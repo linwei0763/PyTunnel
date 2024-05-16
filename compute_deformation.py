@@ -20,10 +20,11 @@ if __name__ == '__main__':
         # part_stations = ['0-103', '1-1', '3-1', '4-1']
         # part_stations = ['0-0', '0-103', '4-1']
         # part_stations = ['4-1', '4-2', '4-3']
-        part_stations = ['3-1']
+        # part_stations = ['3-1']
         # part_stations = ['4-1']
         # part_stations = ['1-1']
         # part_stations = ['0-0', '0-12', '0-16', '0-19', '0-20', '0-25', '0-76', '0-81', '0-89', '0-96', '0-98', '0-101', '0-103']
+        part_stations = ['0-0', '0-12', '0-16', '0-19', '0-20', '0-25', '0-76', '0-81', '0-89', '0-96', '0-98', '0-101', '0-103', '1-9', '4-1', '4-2', '4-3']
         # part_stations = ['0-0', '0-12', '0-16', '0-19', '0-20', '0-25', '0-76', '0-81', '0-89', '0-96', '0-98', '0-101', '0-103', '1-9', '4-1', '4-2', '4-3', '4-4', '4-5', '4-6', '4-7', '4-8', '5-1', '5-2', '5-3', '5-4']
     
     voxel_size = 0.04
@@ -180,14 +181,14 @@ if __name__ == '__main__':
             # pc = np.hstack((pc, xyz_p, d, error))
             # xyz_p, d, error, xy_p_norm_all, xy_p_polynomial_all = ring.compute_d_seg_polynomial()
             # pc = np.hstack((pc, xyz_p, d, error))
-            xyz_p, d, error, xy_p_norm_all, xy_p_ellipse_polynomial_all = ring.compute_d_seg_ellipse_polynomial()
+            xyz_p, d, error, dislocation_all, rotation_all, xy_p_norm_all, xy_p_ellipse_polynomial_all = ring.compute_d_seg_ellipse_polynomial()
             pc = np.hstack((pc, xyz_p, d, error))
             
-            # dislocation_all_all.append([int(file.split('.')[0].split('-')[0]), int(file.split('.')[0].split('-')[1]), int(file.split('.')[0].split('-')[2])])
-            # rotation_all_all.append([int(file.split('.')[0].split('-')[0]), int(file.split('.')[0].split('-')[1]), int(file.split('.')[0].split('-')[2])])
-            # for i in range(num_seg_all[tunnel_no]):
-            #     dislocation_all_all[-1].append(dislocation_all[i])
-            #     rotation_all_all[-1].append(rotation_all[i])
+            dislocation_all_all.append([int(file.split('.')[0].split('-')[0]), int(file.split('.')[0].split('-')[1]), int(file.split('.')[0].split('-')[2])])
+            rotation_all_all.append([int(file.split('.')[0].split('-')[0]), int(file.split('.')[0].split('-')[1]), int(file.split('.')[0].split('-')[2])])
+            for i in range(num_seg_all[tunnel_no]):
+                dislocation_all_all[-1].append(dislocation_all[i])
+                rotation_all_all[-1].append(rotation_all[i])
                 
             xy_p_norm_all = pd.DataFrame(xy_p_norm_all)
             xy_p_norm_all.to_excel(os.path.join(path_o, file.split('.')[0] + '-norm.xlsx'), header=False, index=False)
@@ -204,9 +205,9 @@ if __name__ == '__main__':
             
             np.savetxt(os.path.join(path_o, file), pc, fmt=fmt)
             
-    # ovalisation_all = pd.DataFrame(ovalisation_all)
-    # ovalisation_all.to_excel(os.path.join(path_o, 'ovalisation.xlsx'), header=False, index=False)
-    # dislocation_all_all = pd.DataFrame(dislocation_all_all)
-    # dislocation_all_all.to_excel(os.path.join(path_o, 'dislocation.xlsx'), header=False, index=False)
-    # rotation_all_all = pd.DataFrame(rotation_all_all)
-    # rotation_all_all.to_excel(os.path.join(path_o, 'rotation.xlsx'), header=False, index=False)
+    ovalisation_all = pd.DataFrame(ovalisation_all)
+    ovalisation_all.to_excel(os.path.join(path_o, 'ovalisation.xlsx'), header=False, index=False)
+    dislocation_all_all = pd.DataFrame(dislocation_all_all)
+    dislocation_all_all.to_excel(os.path.join(path_o, 'dislocation.xlsx'), header=False, index=False)
+    rotation_all_all = pd.DataFrame(rotation_all_all)
+    rotation_all_all.to_excel(os.path.join(path_o, 'rotation.xlsx'), header=False, index=False)

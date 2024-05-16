@@ -117,6 +117,13 @@ def fit_polynomial_residual(param, k, theta, residual):
         d += param[i + 1] * (theta ** (i + 1))
     
     d = residual - d
+    d = np.sqrt(np.square(d))
+    
+    alpha = 0.00001
+    
+    reg = np.sqrt(alpha) * np.linalg.norm(param[1:k + 1])
+    reg = np.full_like(d, reg)
+    d = np.concatenate([d, reg])
     
     return d
 
