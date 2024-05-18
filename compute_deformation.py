@@ -35,6 +35,10 @@ if __name__ == '__main__':
     width_all = [0.35, 0.35, 0.35, 0.35, 0.4, 0.4]
     num_seg_all = [6, 6, 6, 6, 7, 7]
     
+    angle_joint_width_all = [0.004, 0.004, 0.004, 0.004, 0.012, 0.012]
+    for i in range(6):
+        angle_joint_width_all[i] = angle_joint_width_all[i] / r_all[i]
+    
     angles_b_all = [[[9, -9], [35.375, -34.375], [33.75, -33.75], [33.75, -33.75], [33.75, -33.75], [34.375, -35.375]],
                     [[9.6, -9.6], [35.4, -33.75], [33.75, -33.75], [33.75, -33.75], [33.75, -33.75], [33.75, -35.4]],
                     [[9.6, -9.6], [35.4, -33.75], [33.75, -33.75], [33.75, -33.75], [33.75, -33.75], [33.75, -35.4]],
@@ -157,7 +161,7 @@ if __name__ == '__main__':
                 pc[:, 0]= - pc[:, 0]
                 pc[:, [1, 2]]= pc[:, [2, 1]]
             
-            ring = Ring(pc[:, 0:3], pc[:, 3], pc[:, 4], r_all[tunnel_no], length_all[tunnel_no], width_all[tunnel_no],  num_seg_all[tunnel_no], angles_b_all[tunnel_no], angles_m_all[tunnel_no], angles_f_all[tunnel_no], v0_dir_all[station])
+            ring = Ring(pc[:, 0:3], pc[:, 3], pc[:, 4], r_all[tunnel_no], length_all[tunnel_no], width_all[tunnel_no],  num_seg_all[tunnel_no], angle_joint_width_all[tunnel_no], angles_b_all[tunnel_no], angles_m_all[tunnel_no], angles_f_all[tunnel_no], v0_dir_all[station])
             
             # 1
             xyz_p, d, error = ring.compute_d_circle()
