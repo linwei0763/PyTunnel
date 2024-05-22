@@ -283,12 +283,15 @@ class Ring():
         d = np.zeros(self.num_point)
         error = np.zeros(self.num_point)
         
-        ovalisation_seg_all = []
-        polynomial_seg_all = []
-        
         r_length = 4
         
+        ovalisation_seg_all = []
+        
+        polynomial_seg_all = []
         k_polynomial_max = 4
+        
+        polynomial_zone_seg_all = []
+        angle_zone = 3 / 180 * np.pi        
         
         for i in range(self.num_seg):
             
@@ -326,6 +329,9 @@ class Ring():
             ovalisation_seg_all.append([a, b, theta_ellipse])
             
             theta_seg_middle = np.arctan2(xy_p_seg_middle[:, 1], xy_p_seg_middle[:, 0])
+            if i == 0:
+                theta_seg_middle[np.where(theta_seg_middle < 0)[0]] += 2 * np.pi
+            
             theta_seg_middle = theta_seg_middle - theta_ellipse
             
             x_seg_middle_ellipse = a * np.cos(theta_seg_middle)
@@ -341,9 +347,14 @@ class Ring():
             param_ls = optimize.least_squares(fit_polynomial_residual, param, xtol=None, gtol=None, loss='soft_l1', f_scale=0.001, args=(k_polynomial, theta_seg_middle, residual))
             param_ls = param_ls.x
             
-            polynomial_seg_all.append(param_ls)            
+            polynomial_seg_all.append(param_ls)
+            
+            
             
             theta_seg = np.arctan2(xy_p_seg[:, 1], xy_p_seg[:, 0])
+            if i == 0:
+                theta_seg[np.where(theta_seg < 0)[0]] += 2 * np.pi
+            
             theta_seg = theta_seg - theta_ellipse
             x_seg_ellipse = a * np.cos(theta_seg)
             y_seg_ellipse = b * np.sin(theta_seg)
@@ -419,6 +430,8 @@ class Ring():
                 param_polynomial = polynomial_seg_all[i + 1, :]
             
             theta_joint_next = theta_joint - self.angle_joint_width - theta_ellipse
+            if i == self.num_seg - 1:
+                theta_joint_next += 2 * np.pi
             
             xy_joint_next = np.asarray([a * np.cos(theta_joint_next), b * np.sin(theta_joint_next)])
             xy_joint_next = rotate_xy(xy_joint_next.reshape(1, 2), theta_ellipse).reshape(2)
@@ -636,6 +649,7 @@ class Ring():
         error = error.reshape(-1, 1)
         
         xy_p_fourier_all = []
+        
         theta_seg_m = np.pi
         
         for i in range(self.num_seg):
@@ -918,14 +932,16 @@ class Ring():
             delta_theta_mc_seg[index_flag] = - delta_theta_mc_seg[index_flag]
             
             boundary_l = np.interp(z_p_seg, [- length / 2, length / 2], [angles_b[i][1] + angle_joint_width, angles_f[i][1] + angle_joint_width])
-            xy_l = np.hstack((np.cos(theta_mc_seg + boundary_l).reshape(-1, 1), np.sin(theta_mc_seg + boundary_l).reshape(-1, 1))) * r
+            # xy_l = np.hstack((np.cos(theta_mc_seg + boundary_l).reshape(-1, 1), np.sin(theta_mc_seg + boundary_l).reshape(-1, 1))) * r
             boundary_u = np.interp(z_p_seg, [- length / 2, length / 2], [angles_b[i][0] - angle_joint_width, angles_f[i][0] - angle_joint_width])
-            xy_u = np.hstack((np.cos(theta_mc_seg + boundary_u).reshape(-1, 1), np.sin(theta_mc_seg + boundary_u).reshape(-1, 1))) * r
+            # xy_u = np.hstack((np.cos(theta_mc_seg + boundary_u).reshape(-1, 1), np.sin(theta_mc_seg + boundary_u).reshape(-1, 1))) * r
             
             index_out = np.where(delta_theta_mc_seg < boundary_l)[0]
-            error[index_out] = np.linalg.norm(xy_l[index_out, :] - xy_p_seg[index_out, :], axis=1)
+            # error[index_out] = np.linalg.norm(xy_l[index_out, :] - xy_p_seg[index_out, :], axis=1)
+            error[index_out] = delta_theta_mc_seg[index_out] - boundary_l[index_out]
             index_out = np.where(delta_theta_mc_seg > boundary_u)[0]
-            error[index_out] = np.linalg.norm(xy_p_seg[index_out, :] - xy_u[index_out, :], axis=1)
+            # error[index_out] = np.linalg.norm(xy_p_seg[index_out, :] - xy_u[index_out, :], axis=1)
+            error[index_out] = delta_theta_mc_seg[index_out] - boundary_u[index_out]
             
             error_all[index] = error[:]
 

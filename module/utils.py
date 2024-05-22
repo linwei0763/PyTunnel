@@ -117,7 +117,6 @@ def fit_polynomial_residual(param, k, theta, residual):
         d += param[i + 1] * (theta ** (i + 1))
     
     d = residual - d
-    d = np.sqrt(np.square(d))
     
     alpha = 0.00001
     
@@ -126,6 +125,16 @@ def fit_polynomial_residual(param, k, theta, residual):
     d = np.concatenate([d, reg])
     
     return d
+
+
+def fit_polynominal_residual_zone(param, theta_joint_zone, theta, residual):
+    
+    d = param[0] * ((theta - theta_joint_zone) ** 2) + param[1] * ((theta - theta_joint_zone) ** 4)    
+    d = residual - d
+    
+    return d
+
+
 
 
 def grid_sample(points, voxel_size):

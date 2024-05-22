@@ -1,3 +1,4 @@
+import matplotlib.pyplot as plt
 import numpy as np
 import os
 import pandas as pd
@@ -19,12 +20,15 @@ if __name__ == '__main__':
         # part_stations = ['0-0', '0-103', '1-1', '3-1', '4-1']
         # part_stations = ['0-103', '1-1', '3-1', '4-1']
         # part_stations = ['0-0', '0-103', '4-1']
-        # part_stations = ['4-1', '4-2', '4-3']
+        # part_stations = ['4-2', '4-3']
+        # part_stations = ['4-4']
         # part_stations = ['3-1']
-        # part_stations = ['4-1']
+        # part_stations = ['4-5', '5-1', '5-4']
+        part_stations = ['4-8']
         # part_stations = ['1-1']
         # part_stations = ['0-0', '0-12', '0-16', '0-19', '0-20', '0-25', '0-76', '0-81', '0-89', '0-96', '0-98', '0-101', '0-103']
-        part_stations = ['0-0', '0-12', '0-16', '0-19', '0-20', '0-25', '0-76', '0-81', '0-89', '0-96', '0-98', '0-101', '0-103', '1-9', '4-1', '4-2', '4-3']
+        # part_stations = ['0-0', '0-12', '0-16', '0-19', '0-20', '0-25', '0-76', '0-81', '0-89', '0-96', '0-98', '0-101', '0-103', '4-1', '4-2', '4-3']
+        # part_stations = ['0-0', '0-12', '0-16', '0-19', '0-20', '0-25', '0-76', '0-81', '0-89', '0-96', '0-98', '0-101', '0-103', '4-5', '4-6', '4-7', '4-8', '5-1', '5-2', '5-3', '5-4']
         # part_stations = ['0-0', '0-12', '0-16', '0-19', '0-20', '0-25', '0-76', '0-81', '0-89', '0-96', '0-98', '0-101', '0-103', '1-9', '4-1', '4-2', '4-3', '4-4', '4-5', '4-6', '4-7', '4-8', '5-1', '5-2', '5-3', '5-4']
     
     voxel_size = 0.04
@@ -36,7 +40,7 @@ if __name__ == '__main__':
     num_seg_all = [6, 6, 6, 6, 7, 7]
     
     angle_joint_width_all = [0.004, 0.004, 0.004, 0.004, 0.012, 0.012]
-    for i in range(6):
+    for i in range(len(angle_joint_width_all)):
         angle_joint_width_all[i] = angle_joint_width_all[i] / r_all[i]
     
     angles_b_all = [[[9, -9], [35.375, -34.375], [33.75, -33.75], [33.75, -33.75], [33.75, -33.75], [34.375, -35.375]],
@@ -193,7 +197,18 @@ if __name__ == '__main__':
             for i in range(num_seg_all[tunnel_no]):
                 dislocation_all_all[-1].append(dislocation_all[i])
                 rotation_all_all[-1].append(rotation_all[i])
-                
+            print(dislocation_all_all[-1])
+            print(rotation_all_all[-1])
+            
+            plt.figure(figsize=(20, 20))
+            plt.scatter(xy_p_norm_all[:, 3], xy_p_norm_all[:, 4], s=1, c=xy_p_norm_all[:, 5], marker='.', cmap='viridis')
+            plt.scatter(xy_p_ellipse_polynomial_all[:, 3], xy_p_ellipse_polynomial_all[:, 4], s=1, c=xy_p_ellipse_polynomial_all[:, 5], marker='.', cmap='plasma')
+            plt.gca().set_aspect(1)
+            plt.xlim((-4, 4))
+            plt.ylim((-4, 4))
+            plt.savefig(os.path.join(path_o, file.split('.')[0] + '.png'), dpi=600)
+            plt.close()
+            
             xy_p_norm_all = pd.DataFrame(xy_p_norm_all)
             xy_p_norm_all.to_excel(os.path.join(path_o, file.split('.')[0] + '-norm.xlsx'), header=False, index=False)
             # xy_p_fourier_all = pd.DataFrame(xy_p_fourier_all)
