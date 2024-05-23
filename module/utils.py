@@ -127,10 +127,18 @@ def fit_polynomial_residual(param, k, theta, residual):
     return d
 
 
-def fit_polynominal_residual_zone(param, theta_joint_zone, theta, residual):
+def fit_polynomial_residual_zone(param, theta_joint_zone, theta, residual):
     
-    d = param[0] * ((theta - theta_joint_zone) ** 2) + param[1] * ((theta - theta_joint_zone) ** 4)    
+    # d = param[0] * ((theta - theta_joint_zone) ** 2) + param[1] * ((theta - theta_joint_zone) ** 4)
+    d = param[0] * ((theta - theta_joint_zone) ** 2)
+    
     d = residual - d
+    
+    alpha = 0.000000001
+    
+    reg = np.sqrt(alpha) * np.linalg.norm(param[:])
+    reg = np.full_like(d, reg)
+    d = np.concatenate([d, reg])
     
     return d
 
