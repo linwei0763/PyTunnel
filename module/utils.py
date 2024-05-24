@@ -130,7 +130,8 @@ def fit_polynomial_residual(param, k, theta, residual):
 def fit_polynomial_residual_zone(param, theta_joint_zone, theta, residual):
     
     # d = param[0] * ((theta - theta_joint_zone) ** 2) + param[1] * ((theta - theta_joint_zone) ** 4)
-    d = param[0] * ((theta - theta_joint_zone) ** 2)
+    # d = param[0] * ((theta - theta_joint_zone) ** 2)
+    d = param[0] * (theta - theta_joint_zone)
     
     d = residual - d
     
