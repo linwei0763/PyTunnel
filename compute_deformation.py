@@ -21,15 +21,15 @@ if __name__ == '__main__':
         # part_stations = ['0-103', '1-1', '3-1', '4-1']
         # part_stations = ['0-0', '0-103', '4-1']
         # part_stations = ['4-2', '4-3']
-        # part_stations = ['4-1']
+        # part_stations = ['4-1', '4-2', '4-3']
         # part_stations = ['3-1']
         # part_stations = ['4-5', '5-1', '5-4']
         # part_stations = ['4-8']
         # part_stations = ['1-1']
-        part_stations = ['0-0', '0-12', '0-16', '0-19', '0-20', '0-25', '0-76', '0-81', '0-89', '0-96', '0-98', '0-101', '0-103']
+        # part_stations = ['0-0', '0-12', '0-16', '0-19', '0-20', '0-25', '0-76', '0-81', '0-89', '0-96', '0-98', '0-101', '0-103']
         # part_stations = ['0-0', '0-12', '0-16', '0-19', '0-20', '0-25', '0-76', '0-81', '0-89', '0-96', '0-98', '0-101', '0-103', '4-1', '4-2', '4-3']
         # part_stations = ['0-0', '0-12', '0-16', '0-19', '0-20', '0-25', '0-76', '0-81', '0-89', '0-96', '0-98', '0-101', '0-103', '4-5', '4-6', '4-7', '4-8', '5-1', '5-2', '5-3', '5-4']
-        # part_stations = ['0-0', '0-12', '0-16', '0-19', '0-20', '0-25', '0-76', '0-81', '0-89', '0-96', '0-98', '0-101', '0-103', '1-9', '4-1', '4-2', '4-3', '4-4', '4-5', '4-6', '4-7', '4-8', '5-1', '5-2', '5-3', '5-4']
+        part_stations = ['0-0', '0-12', '0-16', '0-19', '0-20', '0-25', '0-76', '0-81', '0-89', '0-96', '0-98', '0-101', '0-103', '1-9', '4-1', '4-2', '4-3', '4-4', '4-5', '4-6', '4-7', '4-8', '5-1', '5-2', '5-3', '5-4']
     
     voxel_size = 0.04
     max_num = 40960
@@ -107,6 +107,10 @@ if __name__ == '__main__':
     path_o = 'result'
     
     index_label = 4
+    
+    param_config = {}
+    
+    
     '''------config------'''
     
     if not os.path.exists(path_o):
@@ -167,28 +171,32 @@ if __name__ == '__main__':
             
             ring = Ring(pc[:, 0:3], pc[:, 3], pc[:, 4], r_all[tunnel_no], length_all[tunnel_no], width_all[tunnel_no],  num_seg_all[tunnel_no], angle_joint_width_all[tunnel_no], angles_b_all[tunnel_no], angles_m_all[tunnel_no], angles_f_all[tunnel_no], v0_dir_all[station])
             
-            # 1
+            '''circle'''
             xyz_p, d, error = ring.compute_d_circle()
             pc = np.hstack((pc, xyz_p, d, error))
             
-            # 2
+            '''ellipse'''
             xyz_p, d, error, ovalisation = ring.compute_d_ellipse()
             pc = np.hstack((pc, xyz_p, d, error))
             ovalisation_all.append([file.split('.')[0], ovalisation[0], ovalisation[1], ovalisation[2]])
             
-            # 3
+            '''seg_circle'''
             xyz_p, d, error = ring.compute_d_seg_circle()
             pc = np.hstack((pc, xyz_p, d, error))
             
-            # 4
-            xyz_p, d, error, dislocation_all, rotation_all = ring.compute_d_seg_ellipse()
+            '''seg_ellipse'''
+            # xyz_p, d, error, dislocation_all, rotation_all = ring.compute_d_seg_ellipse()
+            # pc = np.hstack((pc, xyz_p, d, error))
+            
+            '''seg_fourier'''
+            xyz_p, d, error, dislocation_all, rotation_all, xy_p_norm_all, xy_p_fourier_all = ring.compute_d_seg_fourier()
             pc = np.hstack((pc, xyz_p, d, error))
             
-            # 5
-            # xyz_p, d, error, dislocation_all, rotation_all, xy_p_norm_all, xy_p_fourier_all = ring.compute_d_seg_fourier()
-            # pc = np.hstack((pc, xyz_p, d, error))
+            '''seg_polynomial'''
             # xyz_p, d, error, xy_p_norm_all, xy_p_polynomial_all = ring.compute_d_seg_polynomial()
             # pc = np.hstack((pc, xyz_p, d, error))
+            
+            '''seg_ellipse_polynomial'''
             xyz_p, d, error, dislocation_all, rotation_all, xy_p_norm_all, xy_p_ellipse_polynomial_all = ring.compute_d_seg_ellipse_polynomial()
             pc = np.hstack((pc, xyz_p, d, error))
             
