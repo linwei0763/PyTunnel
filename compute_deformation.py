@@ -24,7 +24,7 @@ if __name__ == '__main__':
         # part_stations = ['4-1', '4-2', '4-3']
         # part_stations = ['3-1']
         # part_stations = ['4-5', '5-1', '5-4']
-        # part_stations = ['4-8']
+        # part_stations = ['4-1']
         # part_stations = ['1-1']
         # part_stations = ['0-0', '0-12', '0-16', '0-19', '0-20', '0-25', '0-76', '0-81', '0-89', '0-96', '0-98', '0-101', '0-103']
         # part_stations = ['0-0', '0-12', '0-16', '0-19', '0-20', '0-25', '0-76', '0-81', '0-89', '0-96', '0-98', '0-101', '0-103', '4-1', '4-2', '4-3']
@@ -76,41 +76,12 @@ if __name__ == '__main__':
             for k in range(len(angles_f_all[i][j])):
                 angles_f_all[i][j][k] = angles_f_all[i][j][k] / 180 * np.pi
     
-    # angles_b_all = [[[-9.00, 9.00], [9.00, 78.75], [78.75, 146.25], [146.25, 213.75], [213.75, 281.25], [281.25, 351.00]],
-    #                 [[-9.60, 9.60], [9.60, 78.75], [78.75, 146.25], [146.25, 213.75], [213.75, 281.25], [281.25, 350.40]],
-    #                 [[-9.60, 9.60], [9.60, 78.75], [78.75, 146.25], [146.25, 213.75], [213.75, 281.25], [281.25, 350.40]],
-    #                 [[-6.73, 6.73], [6.73, 73.00], [73.00, 138.00], [138.00, 222.00], [222.00, 287.00], [287.00, 353.27]],
-    #                 [[-7.0000, 7.0000], [7.0000, 66.3158], [66.3158, 123.1579], [123.1579, 180.0000], [180.0000, 236.8421], [236.8421, 293.6842], [293.6842, 353.0000]],
-    #                 [[-7.0000, 7.0000], [7.0000, 66.3158], [66.3158, 123.1579], [123.1579, 180.0000], [180.0000, 236.8421], [236.8421, 293.6842], [293.6842, 353.0000]]]
-    # angles_m_all = [[[-10.00, 10.00], [10.00, 78.75], [78.75, 146.25], [146.25, 213.75], [213.75, 281.25], [281.25, 350.00]],
-    #                 [[-11.25, 11.25], [11.25, 78.75], [78.75, 146.25], [146.25, 213.75], [213.75, 281.25], [281.25, 348.75]],
-    #                 [[-11.25, 11.25], [11.25, 78.75], [78.75, 146.25], [146.25, 213.75], [213.75, 281.25], [281.25, 348.75]],
-    #                 [[-8.00, 8.00], [8.00, 73.00], [73.00, 138.00], [138.00, 222.00], [222.00, 287.00], [287.00, 352.00]],
-    #                 [[-9.4737, 9.4737], [9.4737, 66.3158], [66.3158, 123.1579], [123.1579, 180.0000], [180.0000, 236.8421], [236.8421, 293.6842], [293.6842, 350.5263]],
-    #                 [[-9.4737, 9.4737], [9.4737, 66.3158], [66.3158, 123.1579], [123.1579, 180.0000], [180.0000, 236.8421], [236.8421, 293.6842], [293.6842, 350.5263]]]
-    # angles_f_all = [[[-11.50, 11.50], [11.50, 78.75], [78.75, 146.25], [146.25, 213.75], [213.75, 281.25], [281.25, 348.50]],
-    #                 [[-12.90, 12.90], [12.90, 78.75], [78.75, 146.25], [146.25, 213.75], [213.75, 281.25], [281.25, 347.10]],
-    #                 [[-12.90, 12.90], [12.90, 78.75], [78.75, 146.25], [146.25, 213.75], [213.75, 281.25], [281.25, 347.10]],
-    #                 [[-9.23, 9.23], [9.23, 73.00], [73.00, 138.00], [138.00, 222.00], [222.00, 287.00], [287.00, 350.77]],
-    #                 [[-11.7467, 11.7467], [11.7467, 66.3158], [66.3158, 123.1579], [123.1579, 180.0000], [180.0000, 236.8421], [236.8421, 293.6842], [293.6842, 348.2533]],
-    #                 [[-11.7467, 11.7467], [11.7467, 66.3158], [66.3158, 123.1579], [123.1579, 180.0000], [180.0000, 236.8421], [236.8421, 293.6842], [293.6842, 348.2533]]]
-    
     flag_trans_yz = [True, False, False, False, False, False]
     flag_v0_dir = [[0, 1, 0], None, None, None, None, None]
     
-    fmt = '%.8f %.8f %.8f %.8f %d'
-    fmt +=  ' %.8f %.8f %.8f %.8f %.8f'
-    fmt +=  ' %.8f %.8f %.8f %.8f %.8f'
-    fmt +=  ' %.8f %.8f %.8f %.8f %.8f'
-    fmt +=  ' %.8f %.8f %.8f %.8f %.8f'
-    fmt +=  ' %.8f %.8f %.8f %.8f %.8f'
     path_o = 'result'
     
     index_label = 4
-    
-    param_config = {}
-    
-    
     '''------config------'''
     
     if not os.path.exists(path_o):
@@ -171,34 +142,69 @@ if __name__ == '__main__':
             
             ring = Ring(pc[:, 0:3], pc[:, 3], pc[:, 4], r_all[tunnel_no], length_all[tunnel_no], width_all[tunnel_no],  num_seg_all[tunnel_no], angle_joint_width_all[tunnel_no], angles_b_all[tunnel_no], angles_m_all[tunnel_no], angles_f_all[tunnel_no], v0_dir_all[station])
             
-            '''circle'''
-            xyz_p, d, error = ring.compute_d_circle()
-            pc = np.hstack((pc, xyz_p, d, error))
-            
             '''ellipse'''
-            xyz_p, d, error, ovalisation = ring.compute_d_ellipse()
-            pc = np.hstack((pc, xyz_p, d, error))
+            xyz_p, d0, d, error, ovalisation = ring.compute_d_ellipse()
+            pc = np.hstack((pc, xyz_p, d0, d, error))
             ovalisation_all.append([file.split('.')[0], ovalisation[0], ovalisation[1], ovalisation[2]])
             
             '''seg_circle'''
-            xyz_p, d, error = ring.compute_d_seg_circle()
-            pc = np.hstack((pc, xyz_p, d, error))
-            
-            '''seg_ellipse'''
-            # xyz_p, d, error, dislocation_all, rotation_all = ring.compute_d_seg_ellipse()
-            # pc = np.hstack((pc, xyz_p, d, error))
+            _, d, error = ring.compute_d_seg_circle()
+            pc = np.hstack((pc, d, error))
             
             '''seg_fourier'''
-            xyz_p, d, error, dislocation_all, rotation_all, xy_p_norm_all, xy_p_fourier_all = ring.compute_d_seg_fourier()
-            pc = np.hstack((pc, xyz_p, d, error))
-            
-            '''seg_polynomial'''
-            # xyz_p, d, error, xy_p_norm_all, xy_p_polynomial_all = ring.compute_d_seg_polynomial()
-            # pc = np.hstack((pc, xyz_p, d, error))
+            # _, d, error, dislocation_all, rotation_all, xy_p_norm_all, xy_p_fourier_all = ring.compute_d_seg_fourier()
+            # pc = np.hstack((pc, d, error))
             
             '''seg_ellipse_polynomial'''
-            xyz_p, d, error, dislocation_all, rotation_all, xy_p_norm_all, xy_p_ellipse_polynomial_all = ring.compute_d_seg_ellipse_polynomial()
-            pc = np.hstack((pc, xyz_p, d, error))
+            cfg_e_p = {}
+            cfg_e_p['r_length'] = 4
+            cfg_e_p['k_polynomial_max'] = 4
+            cfg_e_p['angle_zone'] = 3
+            cfg_e_p['flag_ellipse'] = True
+            cfg_e_p['flag_polynomial'] = False
+            cfg_e_p['flag_zone'] = False
+            _, d, error, dislocation_all, rotation_all, xy_p_norm_all, xy_p_ellipse_polynomial_all = ring.compute_d_seg_ellipse_polynomial(cfg_e_p)
+            pc = np.hstack((pc, d, error))
+            
+            cfg_e_p = {}
+            cfg_e_p['r_length'] = 4
+            cfg_e_p['k_polynomial_max'] = 4
+            cfg_e_p['angle_zone'] = 3
+            cfg_e_p['flag_ellipse'] = True
+            cfg_e_p['flag_polynomial'] = True
+            cfg_e_p['flag_zone'] = False
+            _, d, error, dislocation_all, rotation_all, xy_p_norm_all, xy_p_ellipse_polynomial_all = ring.compute_d_seg_ellipse_polynomial(cfg_e_p)
+            pc = np.hstack((pc, d, error))
+            
+            cfg_e_p = {}
+            cfg_e_p['r_length'] = 4
+            cfg_e_p['k_polynomial_max'] = 4
+            cfg_e_p['angle_zone'] = 3
+            cfg_e_p['flag_ellipse'] = True
+            cfg_e_p['flag_polynomial'] = True
+            cfg_e_p['flag_zone'] = True
+            _, d, error, dislocation_all, rotation_all, xy_p_norm_all, xy_p_ellipse_polynomial_all = ring.compute_d_seg_ellipse_polynomial(cfg_e_p)
+            pc = np.hstack((pc, d, error))
+            
+            # cfg_e_p = {}
+            # cfg_e_p['r_length'] = 4
+            # cfg_e_p['k_polynomial_max'] = 4
+            # cfg_e_p['angle_zone'] = 3
+            # cfg_e_p['flag_ellipse'] = False
+            # cfg_e_p['flag_polynomial'] = True
+            # cfg_e_p['flag_zone'] = True
+            # _, d, error, dislocation_all, rotation_all, xy_p_norm_all, xy_p_ellipse_polynomial_all = ring.compute_d_seg_ellipse_polynomial(cfg_e_p)
+            # pc = np.hstack((pc, d, error))
+            
+            # cfg_e_p = {}
+            # cfg_e_p['r_length'] = 4
+            # cfg_e_p['k_polynomial_max'] = 4
+            # cfg_e_p['angle_zone'] = 3
+            # cfg_e_p['flag_ellipse'] = False
+            # cfg_e_p['flag_polynomial'] = False
+            # cfg_e_p['flag_zone'] = False
+            # xyz_p, d, error, dislocation_all, rotation_all, xy_p_norm_all, xy_p_ellipse_polynomial_all = ring.compute_d_seg_ellipse_polynomial(cfg_e_p)
+            # pc = np.hstack((pc, xyz_p, d, error))
             
             dislocation_all_all.append([int(file.split('.')[0].split('-')[0]), int(file.split('.')[0].split('-')[1]), int(file.split('.')[0].split('-')[2])])
             rotation_all_all.append([int(file.split('.')[0].split('-')[0]), int(file.split('.')[0].split('-')[1]), int(file.split('.')[0].split('-')[2])])
@@ -219,17 +225,16 @@ if __name__ == '__main__':
             
             xy_p_norm_all = pd.DataFrame(xy_p_norm_all)
             xy_p_norm_all.to_excel(os.path.join(path_o, file.split('.')[0] + '-norm.xlsx'), header=False, index=False)
-            # xy_p_fourier_all = pd.DataFrame(xy_p_fourier_all)
-            # xy_p_fourier_all.to_excel(os.path.join(path_o, file.split('.')[0] + '-fourier.xlsx'), header=False, index=False)
-            # xy_p_polynomial_all = pd.DataFrame(xy_p_polynomial_all)
-            # xy_p_polynomial_all.to_excel(os.path.join(path_o, file.split('.')[0] + '-polynomial.xlsx'), header=False, index=False)
             xy_p_ellipse_polynomial_all = pd.DataFrame(xy_p_ellipse_polynomial_all)
             xy_p_ellipse_polynomial_all.to_excel(os.path.join(path_o, file.split('.')[0] + '-ellipse-polynomial.xlsx'), header=False, index=False)
             
+            '''save pc'''
             if flag_trans_yz[tunnel_no]:
                 pc[:, 0]= - pc[:, 0]
                 pc[:, [1, 2]]= pc[:, [2, 1]]
-            
+            fmt = '%.8f %.8f %.8f %.8f %d'
+            for _ in range(pc.shape[1] - 5):
+                fmt +=  ' %.8f'
             np.savetxt(os.path.join(path_o, file), pc, fmt=fmt)
             
     ovalisation_all = pd.DataFrame(ovalisation_all)

@@ -31,19 +31,6 @@ def fit_circle(param, xy_p, r):
     return d
 
 
-def fit_circle_v(param, xyz, r):
-    
-    xy_o = param[0:2]
-    v = param[2:]
-    
-    xyz_p = project2plane(xyz, v)
-    xy_p = xyz_p[:, 0:2]
-    
-    d = np.linalg.norm(xy_p - xy_o, axis=1) - r
-    
-    return d
-
-
 def fit_ellipse(param, xy_p):
     
     f_delta = param[0:2]
@@ -94,20 +81,6 @@ def fit_fourier(param, k, xy_p, r, theta_seg_m):
     return d
 
 
-def fit_polynomial(param, k, xy_p):
-    
-    d = np.zeros(xy_p.shape[0])
-    d[:] = param[0]
-    
-    theta_xy_p = np.arctan2(xy_p[:, 1], xy_p[:, 0])
-    for i in range(k):
-        d += param[i + 1] * (theta_xy_p ** (i + 1))
-    
-    d = np.linalg.norm(xy_p, axis=1) - d
-    
-    return d
-
-
 def fit_polynomial_residual(param, k, theta, residual):
     
     d = np.zeros(theta.shape[0])
@@ -119,6 +92,7 @@ def fit_polynomial_residual(param, k, theta, residual):
     d = residual - d
     
     alpha = 0.00001
+    # alpha = 0
     
     reg = np.sqrt(alpha) * np.linalg.norm(param[1:k + 1])
     reg = np.full_like(d, reg)
@@ -138,14 +112,13 @@ def fit_polynomial_residual_zone(param, theta_joint_zone, theta, residual):
     d = residual - d
     
     alpha = 0.000001
+    # alpha = 0
     
     reg = np.sqrt(alpha) * np.linalg.norm(param[:])
     reg = np.full_like(d, reg)
     d = np.concatenate([d, reg])
     
     return d
-
-
 
 
 def grid_sample(points, voxel_size):
