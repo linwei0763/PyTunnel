@@ -100,7 +100,7 @@ class Ring():
         
         for i in range(self.num_seg):
             index = np.where(self.label == i + 1)[0]
-            if index.shape[0] < 12:
+            if index.shape[0] < 48:
                 xy_o_all[i, :] = np.nan
                 continue
             xy_p_seg = xyz_p[index, 0:2]
@@ -166,7 +166,7 @@ class Ring():
             
             index = np.where(self.label == i + 1)[0]
             
-            if index.shape[0] < 12:
+            if index.shape[0] < 48:
                 ovalisation_seg_all.append(np.full(3, np.nan))
                 polynomial_seg_all.append(np.full(k_polynomial_max + 1, np.nan))
                 theta_seg_m += self.angles_m[i][1]
@@ -526,7 +526,7 @@ class Ring():
             
             index = np.where(self.label == i + 1)[0]
             
-            if index.shape[0] == 0:
+            if index.shape[0] < 48:
                 fourier_seg_all.append(np.full(2 * k_fourier + 1, np.nan))
                 theta_seg_m += self.angles_m[i][1]
                 if i == self.num_seg - 1:
