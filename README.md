@@ -6,9 +6,9 @@ See Seg2Lining
 
 # usage
 
-conda activate pytunnel
+conda activate seg2lining
 
-cd PyTunnel
+cd seg2lining
 
 # feature
 
