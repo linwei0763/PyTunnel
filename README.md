@@ -1,31 +1,34 @@
-# This repository includes the utils supporting Seg2Tunnel and LiningNet.
+# This repository includes the utils supporting Seg2Tunnel, LiningNet, and Pointcept.
 
-# install
-
+# installation
+```bash
 See Seg2Lining
+```
 
 # usage
-
+```bash
 conda activate seg2lining
-
 cd seg2lining
+```
 
-# feature
+# feature seg2tunnel
+```bash
+compute_deformation.py
+count_num_point.py
+count_ring.py
+generate_synthetic_data.py
+generate_synthetic_data_dublin.py
+```
 
-* compute_deformation.py
+# feature liningnet
+```bash
+evaluate_data.py
+evaluate_sparse_data.py
+find_neighbour.py
+read_training_log.py
+```
 
-* count_num_point.py
-
-* count_ring.py
-
-* evaluate_data.py
-
-* evaluate_sparse_data.py
-
-* find_neighbour.py
-
-* generate_synthetic_data.py
-
-* generate_synthetic_data_dublin.py
-
-* read_training_log.py
+# feature pointcept
+```bash
+merge_result.py
+```
