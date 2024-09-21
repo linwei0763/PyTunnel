@@ -1,98 +1,88 @@
+import argparse
 import numpy as np
 import os
 import random as rd
 
-from module.utils import rotate_xy, rotate_xz
+from module.utils import rotate_xyz_random
 
 
-def generate_ring(len_seg, r, wid_joi, dep_joi, res, res_joi):
+def crop_random(pc, sca_crop, ratio_crop):
     
-    ang_joi = wid_joi / r
+    sca_crop = rd.uniform(0, 1) * sca_crop
     
-    ring = []
+    centre = pc[rd.randint(0, pc.shape[0] - 1), 0:3]
+    d = np.linalg.norm(pc[:, 0:3] - centre.reshape(1, 3), axis=1)
+    pc = np.hstack((pc, d.reshape(-1, 1)))
+    pc = pc[pc[:, -1] > sca_crop, 0:-1]
     
-    for y in np.arange(-len_seg / 2, -len_seg / 2 + wid_joi / 2, res_joi):
-        rr = r + dep_joi * ((-len_seg / 2 + wid_joi / 2) - y) / (wid_joi / 2)
-        for ang in np.arange(0, 2 * np.pi, res_joi / r):
-            p = [rr * np.sin(ang), y, rr * np.cos(ang), 0, 0]
-            ring.append(p)
-            
-    for y in np.arange(len_seg / 2 - wid_joi / 2, len_seg / 2, res_joi):
-        rr = r + dep_joi * (y - (len_seg / 2 - wid_joi / 2)) / (wid_joi / 2)
-        for ang in np.arange(0, 2 * np.pi, res_joi / r):
-            p = [rr * np.sin(ang), y, rr * np.cos(ang), 0, 0]
-            ring.append(p)
-    
-    for y in np.arange(-len_seg / 2 + wid_joi / 2, len_seg / 2 - wid_joi / 2, res_joi):
-        for i in range(6):
-            if i == 0:
-                ang_c = (-22.5 / 2 - 2.5 * y / (len_seg / 2 - wid_joi / 2)) / 180 * np.pi
-            elif i == 5:
-                ang_c = (22.5 / 2 + 2.5 * y / (len_seg / 2 - wid_joi / 2)) / 180 * np.pi
-            else:
-                ang_c = (22.5 / 2 + 67.5 * i) / 180 * np.pi
-            ang_s = ang_c - ang_joi / 2
-            ang_e = ang_c + ang_joi / 2
-            for ang in np.arange(ang_s, ang_c, res_joi / r):
-                rr = r + dep_joi * (ang - ang_s) / (ang_joi / 2)
-                p = [rr * np.sin(ang), y, rr * np.cos(ang), 0, 0]
-                ring.append(p)
-            for ang in np.arange(ang_c, ang_e, res_joi / r):
-                rr = r + dep_joi * (ang_e - ang) / (ang_joi / 2)
-                p = [rr * np.sin(ang), y, rr * np.cos(ang), 0, 0]
-                ring.append(p)
+    return pc
+
+
+def generate_jitter(pc, sca_jit):
         
-    for y in np.arange(-len_seg / 2 + wid_joi / 2, len_seg / 2 - wid_joi / 2, res):
-        for i in range(7):
-            if i == 0:
-                ang_s = 0
-                ang_e = (22.5 / 2 + 2.5 * y / (len_seg / 2 - wid_joi / 2)) / 180 * np.pi - ang_joi / 2
-                for ang in np.arange(ang_s, ang_e, res / r):
-                    p = [r * np.sin(ang), y, r * np.cos(ang), 0, 1]
-                    ring.append(p)
-            elif i == 1:
-                ang_s = (22.5 / 2 + 2.5 * y / (len_seg / 2 - wid_joi / 2)) / 180 * np.pi + ang_joi / 2
-                ang_e = (22.5 / 2 + 67.5) / 180 * np.pi - ang_joi / 2
-                for ang in np.arange(ang_s, ang_e, res / r):
-                    p = [r * np.sin(ang), y, r * np.cos(ang), 0, 6]
-                    ring.append(p)
-            elif i == 5:
-                ang_s = (-22.5 / 2 - 67.5) / 180 * np.pi + ang_joi / 2
-                ang_e = (-22.5 / 2 - 2.5 * y / (len_seg / 2 - wid_joi / 2)) / 180 * np.pi - ang_joi / 2
-                for ang in np.arange(ang_s, ang_e, res / r):
-                    p = [r * np.sin(ang), y, r * np.cos(ang), 0, 2]
-                    ring.append(p)
-            elif i == 6:
-                ang_s = (-22.5 / 2 - 2.5 * y / (len_seg / 2 - wid_joi / 2)) / 180 * np.pi + ang_joi / 2
-                ang_e = 0
-                for ang in np.arange(ang_s, ang_e, res / r):
-                    p = [r * np.sin(ang), y, r * np.cos(ang), 0, 1]
-                    ring.append(p)
-            else:
-                ang_s = (22.5 / 2 + (i - 1) * 67.5) / 180 * np.pi + ang_joi / 2
-                ang_e = (22.5 / 2 + i * 67.5) / 180 * np.pi - ang_joi / 2
-                for ang in np.arange(ang_s, ang_e, res / r):
-                    p = [r * np.sin(ang), y, r * np.cos(ang), 0, 7 - i]
-                    ring.append(p)
+    jit = np.random.random((pc.shape[0], 3)) * sca_jit
+    pc[:, 0:3] = pc[:, 0:3] + jit
     
-    ring = np.asarray(ring)
-    return ring
+    return pc
 
 
-def generate_tunnel(len_seg, r, wid_joi, dep_joi, res, res_joi):
+def generate_noise(res_noise, sca_noise, xyz):
     
-    pc = []
-    ring = generate_ring(len_seg, r, wid_joi, dep_joi, res, res_joi)
+    pc_noise = []
     
-    for i in np.arange(-10, 10):
-        ang = rd.randint(0, 16) * 22.5 / 180 * np.pi
-        new_ring = rotate_xz(ring, ang)
-        new_ring[:, 1] += i * len_seg
-        pc.append(new_ring)
+    sca_noise = rd.uniform(0, 1) * sca_noise
     
-    pc = np.vstack(pc[:])
-    ang = rd.randint(0, 360) / 180 * np.pi
-    pc = rotate_xy(pc, ang)
+    for x in np.arange(- sca_noise, sca_noise, res_noise):
+        for y in np.arange(- sca_noise, sca_noise, res_noise):
+            pc_noise.append([x, y, 0, 0, 0])
+    pc_noise = np.asarray(pc_noise)
+    
+    pc_noise = rotate_xyz_random(pc_noise)
+    pc_noise[:, 0:3] = pc_noise[:, 0:3] + xyz.reshape(1, 3)
+    
+    return pc_noise
+
+
+def generate_tunnel(res, a, b, length, pav_z, cel_z, res_noise, sca_noise, ratio_noise_lin, ratio_noise_pav, sca_crop, ratio_crop_lin, ratio_crop_pav, sca_jit, labels):
+    
+    pc_lin = []
+    for ang in np.arange(0, 2 * np.pi, 2 * res / (a + b)):
+        x = a * np.cos(ang)
+        z = b * np.sin(ang)
+        if z >= pav_z and z <= cel_z:
+            for y in np.arange(- length / 2, length / 2, res):
+                pc_lin.append([x, y, z, 0, labels['lin']])
+    pc_lin = np.asarray(pc_lin)
+    
+    pc_pav = []
+    pav_wid_hal = np.sqrt(a**2 * (1 - pav_z**2 / b**2))
+    z = pav_z
+    for x in np.arange(- pav_wid_hal, pav_wid_hal, res):
+        for y in np.arange(- length / 2, length / 2, res):
+            pc_pav.append([x, y, z, 0, labels['pav']])
+    pc_pav = np.asarray(pc_pav)    
+    
+    num = pc_lin.shape[0]
+    
+    while pc_lin.shape[0] < num * (1 + ratio_noise_lin):
+        pc_lin = np.vstack((pc_lin, generate_noise(res_noise, sca_noise, pc_lin[rd.randint(0, pc_lin.shape[0] - 1), 0:3])))
+        
+    num = pc_pav.shape[0]
+    while pc_pav.shape[0] < num * (1 + ratio_noise_pav):
+        pc_pav = np.vstack((pc_pav, generate_noise(res_noise, sca_noise, pc_pav[rd.randint(0, pc_pav.shape[0] - 1), 0:3])))
+    
+    num = pc_lin.shape[0]
+    while pc_lin.shape[0] >= num * (1 - ratio_crop_lin):
+        pc_lin = crop_random(pc_lin, sca_crop, ratio_crop_lin)
+        
+    num = pc_pav.shape[0]
+    while pc_pav.shape[0] >= num * (1 - ratio_crop_pav):
+        pc_pav = crop_random(pc_pav, sca_crop, ratio_crop_pav)
+    
+    pc = np.vstack((pc_lin ,pc_pav))
+    
+    pc = generate_jitter(pc, sca_jit)
+    
     np.random.shuffle(pc)
     
     return pc
@@ -101,20 +91,63 @@ def generate_tunnel(len_seg, r, wid_joi, dep_joi, res, res_joi):
 if __name__ == '__main__':
     
     '''config'''
-    path_o = 'result'
-    fns = ['1-1', '1-2', '1-3', '1-4', '1-5', '1-6', '1-7', '1-8', '1-9', '1-10', '1-11', '1-12', '1-13', '1-14', '1-15', '1-16', '1-17', '2-1', '2-2', '2-3', '2-4', '2-5', '2-6', '2-7', '2-8', '2-9', '2-10', '2-11', '2-12', '2-13', '2-14']
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--dataset', default=None, type=str)
+    args = parser.parse_args()
     
-    len_seg = 1.5
-    r = 2.75
-    wid_joi = 0.008
-    dep_joi = 0.022
-    res = 0.0075
-    res_joi = 0.002
+    path_o = 'result'
+    fns = ['1-1', '1-2', '1-3', '1-4', '1-5', '1-6', '1-7', '1-8', '1-9', '1-10', '1-11', '1-12', '1-13', '1-14', '1-15', '1-16', '1-17', '1-18', '1-19', '1-20']
+    
+    if args.dataset == 'dublin':
+        res = 0.01
+        a = 7.421
+        b = 5.18
+        length = 5
+        pav_z = - 2.8
+        cel_z = 2.8
+        res_noise = 5 * res
+        sca_noise = 0.5
+        ratio_noise_lin = 0.05
+        ratio_noise_pav = 0.01
+        sca_crop = 1
+        ratio_crop_lin = 0.5
+        ratio_crop_pav = 0.1
+        sca_jit = res
+        sca_ran = 0.1
+        labels = {'lin':1, 'pav':2}
+    
+    if args.dataset == 'wuxi':
+        res = 0.01
+        a = 2.75
+        b = 2.75
+        length = 30
+        pav_z = - 2
+        cel_z = 1e5
+        res_noise = 1 * res
+        sca_noise = 0.2
+        ratio_noise_lin = 0.1
+        ratio_noise_pav = 0.001
+        sca_crop = 0
+        ratio_crop_lin = 0
+        ratio_crop_pav = 0
+        sca_jit = res
+        sca_ran = 0.1
+        labels = {'lin':1, 'pav':0}
     '''config'''
     
     '''call'''
+    if not os.path.exists(path_o):
+        os.makedirs(path_o)
+    
     for fn in fns:
-        pc = generate_tunnel(len_seg, r, wid_joi, dep_joi, res, res_joi)
+        aa = rd.uniform(b, a)
+        bb = rd.uniform(b, aa)
+        
+        pc = generate_tunnel(res, aa, bb, length, pav_z, cel_z, res_noise, sca_noise, ratio_noise_lin, ratio_noise_pav, sca_crop, ratio_crop_lin, ratio_crop_pav, sca_jit, labels)
+        
+        sca_ran_ran = rd.uniform(1 - sca_ran, 1 + sca_ran)
+        pc[:, 0:3] = pc[:, 0:3] * sca_ran_ran
+        
         np.savetxt(os.path.join(path_o, fn + '.txt'), pc, fmt='%.8f %.8f %.8f %.8f %d')
     '''call'''
     

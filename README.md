@@ -13,22 +13,22 @@ cd seg2lining
 
 # feature seg2tunnel
 ```bash
-compute_deformation.py
-count_num_point.py
-count_ring.py
-generate_synthetic_data.py
-generate_synthetic_data_dublin.py
+python compute_deformation.py
+python count_num_point.py
+python count_ring.py
+python generate_synthetic_data.py --dataset=dublin
+python generate_synthetic_data.py --dataset=wuxi
 ```
 
 # feature liningnet
 ```bash
-evaluate_data.py
-evaluate_sparse_data.py
-find_neighbour.py
-read_training_log.py
+python evaluate_data.py
+python evaluate_sparse_data.py
+python find_neighbour.py
+python read_training_log.py
 ```
 
 # feature pointcept
 ```bash
-merge_result.py
+python merge_result.py
 ```

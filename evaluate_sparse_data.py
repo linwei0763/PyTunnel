@@ -19,9 +19,10 @@ def prepare_sparse_data(voxel_size, path_data, sparse_stations, sparse_rings):
     stations = {}
     for file in files:
         station = file.rsplit('-', 1)[0]
-        if (station not in stations.keys()) and (station in sparse_stations):
-            stations[station] = []
-        stations[station].append(file)
+        if station in sparse_stations:
+            if station not in stations.keys():
+                stations[station] = []
+            stations[station].append(file)
     
     for station in stations.keys():
         pc = []
@@ -68,7 +69,7 @@ if __name__ == '__main__':
     
     '''------run------'''
     if flag_prepare:
-        prepare_sparse_data(voxel_size, path_data, sparse_rings)
+        prepare_sparse_data(voxel_size, path_data, sparse_stations, sparse_rings)
     
     spar_pcs = []
     for sparse_station in sparse_stations:
