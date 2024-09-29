@@ -18,6 +18,7 @@ python count_num_point.py
 python count_ring.py
 python generate_synthetic_data.py --dataset=dublin
 python generate_synthetic_data.py --dataset=wuxi
+python transform_rgb.py
 ```
 
 # feature liningnet
