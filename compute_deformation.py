@@ -14,11 +14,11 @@ if __name__ == '__main__':
     path_i = '../Seg2Tunnel/seg2tunnel'
     # path_i = 'data'
     
-    flag_all = True
-    # flag_all = False
+    # flag_all = True
+    flag_all = False
     if not flag_all:
         # part_stations = ['0-0', '0-12', '0-16', '0-19', '0-20', '0-25', '0-76', '0-81', '0-89', '0-96', '0-98', '0-101', '0-103', '1-9', '4-1', '4-2', '4-3', '4-4', '4-5', '4-6', '4-7', '4-8', '5-1', '5-2', '5-3', '5-4']
-        part_stations = ['4-1']
+        part_stations = ['5-1']
     
     voxel_size = 0.04
     max_num = 40960
@@ -135,55 +135,58 @@ if __name__ == '__main__':
             xyz_p, d0, d, error, ovalisation = ring.compute_d_ellipse()
             pc = np.hstack((pc, xyz_p, d0, d, error))
             ovalisation_all.append([file.split('.')[0], ovalisation[0], ovalisation[1], ovalisation[2]])
+            '''ellipse'''
             
             '''seg_circle'''
             _, d, error = ring.compute_d_seg_circle()
             pc = np.hstack((pc, d, error))
+            '''seg_circle'''
             
             '''seg_fourier'''
             # _, d, error, dislocation_all, rotation_all, xy_p_norm_all, xy_p_fourier_all = ring.compute_d_seg_fourier()
             # pc = np.hstack((pc, d, error))
+            '''seg_fourier'''
             
             '''seg_ellipse_polynomial'''
-            cfg_e_p = {}
-            cfg_e_p['r_length'] = 4
-            cfg_e_p['k_polynomial_max'] = 4
-            cfg_e_p['angle_zone'] = 3
-            cfg_e_p['flag_ellipse'] = True
-            cfg_e_p['flag_polynomial'] = False
-            cfg_e_p['flag_zone'] = False
-            _, d, error, dislocation_all, rotation_all, xy_p_norm_all, xy_p_ellipse_polynomial_all = ring.compute_d_seg_ellipse_polynomial(cfg_e_p)
-            pc = np.hstack((pc, d, error))
-            
-            cfg_e_p = {}
-            cfg_e_p['r_length'] = 4
-            cfg_e_p['k_polynomial_max'] = 4
-            cfg_e_p['angle_zone'] = 3
-            cfg_e_p['flag_ellipse'] = True
-            cfg_e_p['flag_polynomial'] = True
-            cfg_e_p['flag_zone'] = False
-            _, d, error, dislocation_all, rotation_all, xy_p_norm_all, xy_p_ellipse_polynomial_all = ring.compute_d_seg_ellipse_polynomial(cfg_e_p)
-            pc = np.hstack((pc, d, error))
-            
-            cfg_e_p = {}
-            cfg_e_p['r_length'] = 4
-            cfg_e_p['k_polynomial_max'] = 4
-            cfg_e_p['angle_zone'] = 3
-            cfg_e_p['flag_ellipse'] = True
-            cfg_e_p['flag_polynomial'] = True
-            cfg_e_p['flag_zone'] = True
-            _, d, error, dislocation_all, rotation_all, xy_p_norm_all, xy_p_ellipse_polynomial_all = ring.compute_d_seg_ellipse_polynomial(cfg_e_p)
-            pc = np.hstack((pc, d, error))
+            # cfg_e_p = {}
+            # cfg_e_p['r_length'] = 4
+            # cfg_e_p['k_polynomial_max'] = 4
+            # cfg_e_p['angle_zone'] = 3
+            # cfg_e_p['flag_ellipse'] = True
+            # cfg_e_p['flag_polynomial'] = False
+            # cfg_e_p['flag_zone'] = False
+            # _, d, error, dislocation_all, rotation_all, xy_p_norm_all, xy_p_ellipse_polynomial_all, label_dislocation = ring.compute_d_seg_ellipse_polynomial(cfg_e_p)
+            # pc = np.hstack((pc, d, error))
             
             # cfg_e_p = {}
             # cfg_e_p['r_length'] = 4
             # cfg_e_p['k_polynomial_max'] = 4
             # cfg_e_p['angle_zone'] = 3
-            # cfg_e_p['flag_ellipse'] = False
+            # cfg_e_p['flag_ellipse'] = True
+            # cfg_e_p['flag_polynomial'] = True
+            # cfg_e_p['flag_zone'] = False
+            # _, d, error, dislocation_all, rotation_all, xy_p_norm_all, xy_p_ellipse_polynomial_all, label_dislocation = ring.compute_d_seg_ellipse_polynomial(cfg_e_p)
+            # pc = np.hstack((pc, d, error))
+            
+            # cfg_e_p = {}
+            # cfg_e_p['r_length'] = 4
+            # cfg_e_p['k_polynomial_max'] = 4
+            # cfg_e_p['angle_zone'] = 3
+            # cfg_e_p['flag_ellipse'] = True
             # cfg_e_p['flag_polynomial'] = True
             # cfg_e_p['flag_zone'] = True
-            # _, d, error, dislocation_all, rotation_all, xy_p_norm_all, xy_p_ellipse_polynomial_all = ring.compute_d_seg_ellipse_polynomial(cfg_e_p)
-            # pc = np.hstack((pc, d, error))
+            # _, d, error, dislocation_all, rotation_all, xy_p_norm_all, xy_p_ellipse_polynomial_all, label_dislocation = ring.compute_d_seg_ellipse_polynomial(cfg_e_p)
+            # pc = np.hstack((pc, d, error, label_dislocation))
+            
+            cfg_e_p = {}
+            cfg_e_p['r_length'] = 4
+            cfg_e_p['k_polynomial_max'] = 4
+            cfg_e_p['angle_zone'] = 3
+            cfg_e_p['flag_ellipse'] = False
+            cfg_e_p['flag_polynomial'] = True
+            cfg_e_p['flag_zone'] = True
+            _, d, error, dislocation_all, rotation_all, xy_p_norm_all, xy_p_ellipse_polynomial_all, label_dislocation = ring.compute_d_seg_ellipse_polynomial(cfg_e_p)
+            pc = np.hstack((pc, d, error))
             
             # cfg_e_p = {}
             # cfg_e_p['r_length'] = 4
@@ -192,8 +195,9 @@ if __name__ == '__main__':
             # cfg_e_p['flag_ellipse'] = False
             # cfg_e_p['flag_polynomial'] = False
             # cfg_e_p['flag_zone'] = False
-            # xyz_p, d, error, dislocation_all, rotation_all, xy_p_norm_all, xy_p_ellipse_polynomial_all = ring.compute_d_seg_ellipse_polynomial(cfg_e_p)
+            # xyz_p, d, error, dislocation_all, rotation_all, xy_p_norm_all, xy_p_ellipse_polynomial_all, label_dislocation = ring.compute_d_seg_ellipse_polynomial(cfg_e_p)
             # pc = np.hstack((pc, xyz_p, d, error))
+            '''seg_ellipse_polynomial'''
             
             dislocation_all_all.append([int(file.split('.')[0].split('-')[0]), int(file.split('.')[0].split('-')[1]), int(file.split('.')[0].split('-')[2])])
             rotation_all_all.append([int(file.split('.')[0].split('-')[0]), int(file.split('.')[0].split('-')[1]), int(file.split('.')[0].split('-')[2])])
