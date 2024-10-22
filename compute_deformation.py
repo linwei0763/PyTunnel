@@ -12,13 +12,12 @@ if __name__ == '__main__':
     '''------config------'''
     
     path_i = '../Seg2Tunnel/seg2tunnel'
-    # path_i = 'data'
+    path_o = 'result'
     
-    # flag_all = True
-    flag_all = False
+    flag_all = True
+    # flag_all = False
     if not flag_all:
-        # part_stations = ['0-0', '0-12', '0-16', '0-19', '0-20', '0-25', '0-76', '0-81', '0-89', '0-96', '0-98', '0-101', '0-103', '1-9', '4-1', '4-2', '4-3', '4-4', '4-5', '4-6', '4-7', '4-8', '5-1', '5-2', '5-3', '5-4']
-        part_stations = ['5-1']
+        part_stations = ['0-0', '0-12', '0-16', '0-19', '0-20', '0-25', '0-76', '0-81', '0-89', '0-96', '0-98', '0-101', '0-103', '1-9', '4-1', '4-2', '4-3', '4-4', '4-5', '4-6', '4-7', '4-8', '5-1', '5-2', '5-3', '5-4']
     
     voxel_size = 0.04
     max_num = 40960
@@ -67,8 +66,6 @@ if __name__ == '__main__':
     
     flag_trans_yz = [True, False, False, False, False, False]
     flag_v0_dir = [[0, 1, 0], None, None, None, None, None]
-    
-    path_o = 'result'
     
     index_label = 4
     '''------config------'''
@@ -148,35 +145,25 @@ if __name__ == '__main__':
             '''seg_fourier'''
             
             '''seg_ellipse_polynomial'''
-            # cfg_e_p = {}
-            # cfg_e_p['r_length'] = 4
-            # cfg_e_p['k_polynomial_max'] = 4
-            # cfg_e_p['angle_zone'] = 3
-            # cfg_e_p['flag_ellipse'] = True
-            # cfg_e_p['flag_polynomial'] = False
-            # cfg_e_p['flag_zone'] = False
-            # _, d, error, dislocation_all, rotation_all, xy_p_norm_all, xy_p_ellipse_polynomial_all, label_dislocation = ring.compute_d_seg_ellipse_polynomial(cfg_e_p)
-            # pc = np.hstack((pc, d, error))
+            cfg_e_p = {}
+            cfg_e_p['r_length'] = 4
+            cfg_e_p['k_polynomial_max'] = 4
+            cfg_e_p['angle_zone'] = 3
+            cfg_e_p['flag_ellipse'] = True
+            cfg_e_p['flag_polynomial'] = False
+            cfg_e_p['flag_zone'] = False
+            _, d, error, dislocation_all, rotation_all, xy_p_norm_all, xy_p_ellipse_polynomial_all, label_dislocation = ring.compute_d_seg_ellipse_polynomial(cfg_e_p)
+            pc = np.hstack((pc, d, error))
             
-            # cfg_e_p = {}
-            # cfg_e_p['r_length'] = 4
-            # cfg_e_p['k_polynomial_max'] = 4
-            # cfg_e_p['angle_zone'] = 3
-            # cfg_e_p['flag_ellipse'] = True
-            # cfg_e_p['flag_polynomial'] = True
-            # cfg_e_p['flag_zone'] = False
-            # _, d, error, dislocation_all, rotation_all, xy_p_norm_all, xy_p_ellipse_polynomial_all, label_dislocation = ring.compute_d_seg_ellipse_polynomial(cfg_e_p)
-            # pc = np.hstack((pc, d, error))
-            
-            # cfg_e_p = {}
-            # cfg_e_p['r_length'] = 4
-            # cfg_e_p['k_polynomial_max'] = 4
-            # cfg_e_p['angle_zone'] = 3
-            # cfg_e_p['flag_ellipse'] = True
-            # cfg_e_p['flag_polynomial'] = True
-            # cfg_e_p['flag_zone'] = True
-            # _, d, error, dislocation_all, rotation_all, xy_p_norm_all, xy_p_ellipse_polynomial_all, label_dislocation = ring.compute_d_seg_ellipse_polynomial(cfg_e_p)
-            # pc = np.hstack((pc, d, error, label_dislocation))
+            cfg_e_p = {}
+            cfg_e_p['r_length'] = 4
+            cfg_e_p['k_polynomial_max'] = 4
+            cfg_e_p['angle_zone'] = 3
+            cfg_e_p['flag_ellipse'] = False
+            cfg_e_p['flag_polynomial'] = True
+            cfg_e_p['flag_zone'] = False
+            _, d, error, dislocation_all, rotation_all, xy_p_norm_all, xy_p_ellipse_polynomial_all, label_dislocation = ring.compute_d_seg_ellipse_polynomial(cfg_e_p)
+            pc = np.hstack((pc, d, error))
             
             cfg_e_p = {}
             cfg_e_p['r_length'] = 4
@@ -186,17 +173,7 @@ if __name__ == '__main__':
             cfg_e_p['flag_polynomial'] = True
             cfg_e_p['flag_zone'] = True
             _, d, error, dislocation_all, rotation_all, xy_p_norm_all, xy_p_ellipse_polynomial_all, label_dislocation = ring.compute_d_seg_ellipse_polynomial(cfg_e_p)
-            pc = np.hstack((pc, d, error))
-            
-            # cfg_e_p = {}
-            # cfg_e_p['r_length'] = 4
-            # cfg_e_p['k_polynomial_max'] = 4
-            # cfg_e_p['angle_zone'] = 3
-            # cfg_e_p['flag_ellipse'] = False
-            # cfg_e_p['flag_polynomial'] = False
-            # cfg_e_p['flag_zone'] = False
-            # xyz_p, d, error, dislocation_all, rotation_all, xy_p_norm_all, xy_p_ellipse_polynomial_all, label_dislocation = ring.compute_d_seg_ellipse_polynomial(cfg_e_p)
-            # pc = np.hstack((pc, xyz_p, d, error))
+            pc = np.hstack((pc, d, error, label_dislocation))
             '''seg_ellipse_polynomial'''
             
             dislocation_all_all.append([int(file.split('.')[0].split('-')[0]), int(file.split('.')[0].split('-')[1]), int(file.split('.')[0].split('-')[2])])
@@ -229,6 +206,7 @@ if __name__ == '__main__':
             for _ in range(pc.shape[1] - 5):
                 fmt +=  ' %.8f'
             np.savetxt(os.path.join(path_o, file), pc, fmt=fmt)
+            '''save pc'''
             
     ovalisation_all = pd.DataFrame(ovalisation_all)
     ovalisation_all.to_excel(os.path.join(path_o, 'ovalisation.xlsx'), header=False, index=False)

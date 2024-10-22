@@ -34,3 +34,9 @@ python read_training_log.py
 ```bash
 python merge_result.py
 ```
+
+# feature deformation
+```bash
+python compute_deformation.py
+python extract_error.py
+```
