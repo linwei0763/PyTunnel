@@ -37,6 +37,8 @@ python merge_result.py
 
 # feature deformation
 ```bash
+python analyse_convergence.py
+python analyse_dislocation.py
+python analyse_error.py
 python compute_deformation.py
-python extract_error.py
 ```
