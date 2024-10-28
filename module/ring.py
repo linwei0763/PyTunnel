@@ -152,7 +152,7 @@ class Ring():
         polynomial_seg_all = []
         k_polynomial_max = cfg_e_p['k_polynomial_max']
         
-        polynomial_zone_seg_all = np.zeros((self.num_seg * 2, 3))
+        polynomial_zone_seg_all = np.full((self.num_seg * 2, 3), np.nan)
         angle_zone = cfg_e_p['angle_zone'] / 180 * np.pi
         
         theta_seg_m = np.pi
@@ -458,15 +458,17 @@ class Ring():
                     r_per += param_polynomial[j + 1] * (theta_per ** (j + 1))
                     
                 if theta_per < theta_joints[0] + angle_zone:
-                    # r_per += param_polynomial_zone[0, 0] * (theta_per - (theta_joints[0] + angle_zone)) ** 2 + param_polynomial_zone[0, 1] * (theta_per - (theta_joints[0] + angle_zone)) ** 4
-                    # r_per += param_polynomial_zone[0, 0] * (theta_per - (theta_joints[0] + angle_zone))
-                    # r_per += param_polynomial_zone[0, 0] * (theta_per - (theta_joints[0] + angle_zone)) ** 1 + param_polynomial_zone[0, 1] * (theta_per - (theta_joints[0] + angle_zone)) ** 2
-                    r_per += param_polynomial_zone[0, 0] * (theta_per - (theta_joints[0] + angle_zone)) ** 1 + param_polynomial_zone[0, 1] * (theta_per - (theta_joints[0] + angle_zone)) ** 2 + param_polynomial_zone[0, 2] * (theta_per - (theta_joints[0] + angle_zone)) ** 3
+                    if not np.isnan(param_polynomial_zone[0, 0]):
+                        # r_per += param_polynomial_zone[0, 0] * (theta_per - (theta_joints[0] + angle_zone)) ** 2 + param_polynomial_zone[0, 1] * (theta_per - (theta_joints[0] + angle_zone)) ** 4
+                        # r_per += param_polynomial_zone[0, 0] * (theta_per - (theta_joints[0] + angle_zone))
+                        # r_per += param_polynomial_zone[0, 0] * (theta_per - (theta_joints[0] + angle_zone)) ** 1 + param_polynomial_zone[0, 1] * (theta_per - (theta_joints[0] + angle_zone)) ** 2
+                        r_per += param_polynomial_zone[0, 0] * (theta_per - (theta_joints[0] + angle_zone)) ** 1 + param_polynomial_zone[0, 1] * (theta_per - (theta_joints[0] + angle_zone)) ** 2 + param_polynomial_zone[0, 2] * (theta_per - (theta_joints[0] + angle_zone)) ** 3
                 elif theta_per > theta_joints[1] - angle_zone:
-                    # r_per += param_polynomial_zone[1, 0] * (theta_per - (theta_joints[1] - angle_zone)) ** 2 + param_polynomial_zone[1, 1] * (theta_per - (theta_joints[1] - angle_zone)) ** 4
-                    # r_per += param_polynomial_zone[1, 0] * (theta_per - (theta_joints[1] - angle_zone))
-                    # r_per += param_polynomial_zone[1, 0] * (theta_per - (theta_joints[1] - angle_zone)) ** 1 + param_polynomial_zone[1, 1] * (theta_per - (theta_joints[1] - angle_zone)) ** 2
-                    r_per += param_polynomial_zone[1, 0] * (theta_per - (theta_joints[1] - angle_zone)) ** 1 + param_polynomial_zone[1, 1] * (theta_per - (theta_joints[1] - angle_zone)) ** 2 + param_polynomial_zone[1, 2] * (theta_per - (theta_joints[1] - angle_zone)) ** 3
+                    if not np.isnan(param_polynomial_zone[1, 0]):
+                        # r_per += param_polynomial_zone[1, 0] * (theta_per - (theta_joints[1] - angle_zone)) ** 2 + param_polynomial_zone[1, 1] * (theta_per - (theta_joints[1] - angle_zone)) ** 4
+                        # r_per += param_polynomial_zone[1, 0] * (theta_per - (theta_joints[1] - angle_zone))
+                        # r_per += param_polynomial_zone[1, 0] * (theta_per - (theta_joints[1] - angle_zone)) ** 1 + param_polynomial_zone[1, 1] * (theta_per - (theta_joints[1] - angle_zone)) ** 2
+                        r_per += param_polynomial_zone[1, 0] * (theta_per - (theta_joints[1] - angle_zone)) ** 1 + param_polynomial_zone[1, 1] * (theta_per - (theta_joints[1] - angle_zone)) ** 2 + param_polynomial_zone[1, 2] * (theta_per - (theta_joints[1] - angle_zone)) ** 3
                 
                 xy_per += np.asarray([r_per * np.cos(theta_per), r_per * np.sin(theta_per)])
                 xy_p_ellipse_polynomial_all.append([xy_per[0], xy_per[1], i + 1])
