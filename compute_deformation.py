@@ -11,8 +11,8 @@ if __name__ == '__main__':
     
     '''------config------'''
     
+    path_i = '../Seg2Tunnel/seg2tunnel'
     path_i_v = '../Seg2Tunnel/seg2tunnel'
-    path_i = 'data'
     path_o = 'result'
     
     flag_all = True
@@ -21,7 +21,8 @@ if __name__ == '__main__':
         # part_stations = ['0-0', '0-12', '0-16', '0-19', '0-20', '0-25', '0-76', '0-81', '0-89', '0-96', '0-98', '0-101', '0-103', '1-9', '4-1', '4-2', '4-3', '4-4', '4-5', '4-6', '4-7', '4-8', '5-1', '5-2', '5-3', '5-4']
         part_stations = ['4-4', '4-9', '4-16', '5-1', '5-7']
     
-    voxel_size = 0
+    # voxel_size = 0
+    voxel_size = 0.04
     max_num = 40960
     
     r_all = [2.75, 2.75, 2.75, 2.95, 3.75, 3.75]
@@ -69,7 +70,7 @@ if __name__ == '__main__':
     flag_trans_yz = [True, False, False, False, False, False]
     flag_v0_dir = [[0, 1, 0], None, None, None, None, None]
     
-    index_label = 5
+    index_label = 4
     '''------config------'''
     
     if not os.path.exists(path_o):
