@@ -15,7 +15,8 @@ if __name__ == '__main__':
     
     convergence = []
     for i in range(len(stations)):
-        files = fnmatch.filter(os.listdir(path_o), '0-*-ellipse-polynomial.xlsx')
+        station = stations[i]
+        files = fnmatch.filter(os.listdir(path_o), str(station) + '-*-ellipse-polynomial.xlsx')
         r = r_all[i]
         for file in files:
             convergence.append([int(file.split('-')[0]), int(file.split('-')[1]), int(file.split('-')[2])])

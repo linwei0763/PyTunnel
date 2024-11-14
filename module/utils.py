@@ -81,7 +81,7 @@ def fit_fourier(param, k, xy_p, r, theta_seg_m):
     return d
 
 
-def fit_polynomial_residual(param, k, theta, residual):
+def fit_polynomial_residual(param, k, theta, residual, weight_l2):
     
     d = np.zeros(theta.shape[0])
     d[:] = param[0]
@@ -91,30 +91,22 @@ def fit_polynomial_residual(param, k, theta, residual):
     
     d = residual - d
     
-    alpha = 0.00001
-    # alpha = 0
-    
-    reg = np.sqrt(alpha) * np.linalg.norm(param[1:k + 1])
+    reg = weight_l2 * np.linalg.norm(param[1:k + 1])
     reg = np.full_like(d, reg)
     d = np.concatenate([d, reg])
     
     return d
 
 
-def fit_polynomial_residual_zone(param, theta_joint_zone, theta, residual):
+def fit_polynomial_residual_zone(param, k, theta_joint_zone, theta, residual, weight_l2):
     
-    # d = param[0] * ((theta - theta_joint_zone) ** 2) + param[1] * ((theta - theta_joint_zone) ** 4)
-    # d = param[0] * ((theta - theta_joint_zone) ** 2)
-    # d = param[0] * (theta - theta_joint_zone) + param[1] * ((theta - theta_joint_zone) ** 2)
-    # d = param[1] * ((theta - theta_joint_zone) ** 2)
-    d = param[0] * ((theta - theta_joint_zone) ** 1) + param[1] * ((theta - theta_joint_zone) ** 2) + param[2] * ((theta - theta_joint_zone) ** 3)
+    d = np.zeros(theta.shape[0])
+    for i in range(k):
+        d += param[i] * ((theta - theta_joint_zone) ** (i + 1))
     
     d = residual - d
     
-    alpha = 0.000001
-    # alpha = 0
-    
-    reg = np.sqrt(alpha) * np.linalg.norm(param[:])
+    reg = weight_l2 * np.linalg.norm(param[:])
     reg = np.full_like(d, reg)
     d = np.concatenate([d, reg])
     

@@ -151,15 +151,19 @@ class Ring():
         
         polynomial_seg_all = []
         k_polynomial_max = cfg_e_p['k_polynomial_max']
+        k_polynomial_zone = k_polynomial_max - 1
         
-        polynomial_zone_seg_all = np.full((self.num_seg * 2, 3), np.nan)
+        polynomial_zone_seg_all = np.full((self.num_seg * 2, k_polynomial_zone), np.nan)
         angle_zone = cfg_e_p['angle_zone'] / 180 * np.pi
+        
+        f_scale = cfg_e_p['f_scale']
+        weight_l2 = cfg_e_p['weight_l2']
         
         theta_seg_m = np.pi
         for i in range(self.num_seg):
             
             if i == 0:
-                k_polynomial = 3
+                k_polynomial = k_polynomial_max - 1
             else:
                 k_polynomial = k_polynomial_max
             
@@ -183,8 +187,7 @@ class Ring():
             if cfg_e_p['flag_ellipse']:
                 param = np.zeros(3)
                 param[2] = self.r
-                param_ls = optimize.least_squares(fit_ellipse, param, xtol=None, gtol=None, loss='soft_l1', f_scale=0.001, args=(xy_p_seg_middle,))
-                # param_ls = optimize.least_squares(fit_ellipse, param, xtol=None, gtol=None, loss='soft_l1', f_scale=1, args=(xy_p_seg_middle,))
+                param_ls = optimize.least_squares(fit_ellipse, param, xtol=None, gtol=None, loss='soft_l1', f_scale=f_scale, args=(xy_p_seg_middle,))
                 param_ls = param_ls.x
                 f_delta = param_ls[0:2]
                 r_ellipse = param_ls[2]
@@ -221,8 +224,7 @@ class Ring():
                 param[0] = self.r
 
             if cfg_e_p['flag_polynomial']:
-                param_ls = optimize.least_squares(fit_polynomial_residual, param, xtol=None, gtol=None, loss='soft_l1', f_scale=0.001, args=(k_polynomial, theta_seg_middle, residual))
-                # param_ls = optimize.least_squares(fit_polynomial_residual, param, xtol=None, gtol=None, loss='soft_l1', f_scale=1, args=(k_polynomial, theta_seg_middle, residual))
+                param_ls = optimize.least_squares(fit_polynomial_residual, param, xtol=None, gtol=None, loss='soft_l1', f_scale=f_scale, args=(k_polynomial, theta_seg_middle, residual, weight_l2))
                 param_ls = param_ls.x
                 param_polynomial = param_ls
             else:
@@ -241,18 +243,16 @@ class Ring():
                 if index_zone.shape[0] < 12:
                     pass
                 else:
-                    param = np.zeros(3)
-                    param_ls = optimize.least_squares(fit_polynomial_residual_zone, param, xtol=None, gtol=None, loss='soft_l1', f_scale=0.001, args=(theta_joints[0] + angle_zone, theta_seg_middle[index_zone], residual[index_zone]))
-                    # param_ls = optimize.least_squares(fit_polynomial_residual_zone, param, xtol=None, gtol=None, loss='soft_l1', f_scale=1, args=(theta_joints[0] + angle_zone, theta_seg_middle[index_zone], residual[index_zone]))
+                    param = np.zeros(k_polynomial_zone)
+                    param_ls = optimize.least_squares(fit_polynomial_residual_zone, param, xtol=None, gtol=None, loss='soft_l1', f_scale=f_scale, args=(k_polynomial_zone, theta_joints[0] + angle_zone, theta_seg_middle[index_zone], residual[index_zone], weight_l2))
                     param_ls = param_ls.x
                     polynomial_zone_seg_all[2 * i, :] = param_ls
                 index_zone = np.where(theta_seg_middle > theta_joints[1] - angle_zone)[0]
                 if index_zone.shape[0] < 12:
                     pass
                 else:
-                    param = np.zeros(3)
-                    param_ls = optimize.least_squares(fit_polynomial_residual_zone, param, xtol=None, gtol=None, loss='soft_l1', f_scale=0.001, args=(theta_joints[1] - angle_zone, theta_seg_middle[index_zone], residual[index_zone]))
-                    # param_ls = optimize.least_squares(fit_polynomial_residual_zone, param, xtol=None, gtol=None, loss='soft_l1', f_scale=1, args=(theta_joints[1] - angle_zone, theta_seg_middle[index_zone], residual[index_zone]))
+                    param = np.zeros(k_polynomial_zone)
+                    param_ls = optimize.least_squares(fit_polynomial_residual_zone, param, xtol=None, gtol=None, loss='soft_l1', f_scale=f_scale, args=(k_polynomial_zone, theta_joints[1] - angle_zone, theta_seg_middle[index_zone], residual[index_zone], weight_l2))
                     param_ls = param_ls.x
                     polynomial_zone_seg_all[2 * i + 1, :] = param_ls
                 
@@ -272,14 +272,11 @@ class Ring():
                 d[index] += param_polynomial[j + 1] * (theta_seg ** (j + 1))
             
             index_zone = np.where(theta_seg < theta_joints[0] + angle_zone)[0]
-            # d[index][index_zone] += polynomial_zone_seg_all[2 * i, 0] * ((theta_seg[index_zone] - (theta_joints[0] + angle_zone)) ** 2) + polynomial_zone_seg_all[2 * i, 1] * ((theta_seg[index_zone] - (theta_joints[0] + angle_zone)) ** 4)
-            # d[index][index_zone] += polynomial_zone_seg_all[2 * i, 0] * ((theta_seg[index_zone] - (theta_joints[0] + angle_zone)) ** 1) + polynomial_zone_seg_all[2 * i, 1] * ((theta_seg[index_zone] - (theta_joints[0] + angle_zone)) ** 2)
-            d[index][index_zone] += polynomial_zone_seg_all[2 * i, 0] * ((theta_seg[index_zone] - (theta_joints[0] + angle_zone)) ** 1) + polynomial_zone_seg_all[2 * i, 1] * ((theta_seg[index_zone] - (theta_joints[0] + angle_zone)) ** 2) + polynomial_zone_seg_all[2 * i, 2] * ((theta_seg[index_zone] - (theta_joints[0] + angle_zone)) ** 3)
-            
+            for j in range(k_polynomial_zone):
+                d[index][index_zone] += polynomial_zone_seg_all[2 * i, j] * ((theta_seg[index_zone] - (theta_joints[0] + angle_zone)) ** (j + 1))
             index_zone = np.where(theta_seg > theta_joints[1] - angle_zone)[0]
-            # d[index][index_zone] += polynomial_zone_seg_all[2 * i + 1, 0] * ((theta_seg[index_zone] - (theta_joints[1] - angle_zone)) ** 2) + polynomial_zone_seg_all[2 * i + 1, 1] * ((theta_seg[index_zone] - (theta_joints[1] - angle_zone)) ** 4)
-            # d[index][index_zone] += polynomial_zone_seg_all[2 * i + 1, 0] * ((theta_seg[index_zone] - (theta_joints[1] - angle_zone)) ** 1) + polynomial_zone_seg_all[2 * i + 1, 1] * ((theta_seg[index_zone] - (theta_joints[1] - angle_zone)) ** 2)
-            d[index][index_zone] += polynomial_zone_seg_all[2 * i + 1, 0] * ((theta_seg[index_zone] - (theta_joints[1] - angle_zone)) ** 1) + polynomial_zone_seg_all[2 * i + 1, 1] * ((theta_seg[index_zone] - (theta_joints[1] - angle_zone)) ** 2) + polynomial_zone_seg_all[2 * i + 1, 2] * ((theta_seg[index_zone] - (theta_joints[1] - angle_zone)) ** 3)
+            for j in range(k_polynomial_zone):
+                d[index][index_zone] += polynomial_zone_seg_all[2 * i + 1, j] * ((theta_seg[index_zone] - (theta_joints[1] + angle_zone)) ** (j + 1))
             
             error[index] = np.linalg.norm(xy_p_seg, axis=1) - d[index]
             d[index] = d[index] - self.r
@@ -302,7 +299,7 @@ class Ring():
         for i in range(self.num_seg):
             
             if i == 0:
-                k_polynomial = 3
+                k_polynomial = k_polynomial_max - 1
             else:
                 k_polynomial = k_polynomial_max
             
@@ -338,23 +335,19 @@ class Ring():
             
             '''polynomial zone'''
             theta_joint_zone = theta_joints[0] + angle_zone
-            # r_joint_last = param_polynomial_zone[0] * ((theta_joint_last - theta_joint_zone) ** 2) + param_polynomial_zone[1] * ((theta_joint_last - theta_joint_zone) ** 4)
-            # r_joint_last = param_polynomial_zone[0] * (theta_joint_last - theta_joint_zone)
-            # r_joint_last = param_polynomial_zone[0] * ((theta_joint_last - theta_joint_zone) ** 1) + param_polynomial_zone[1] * ((theta_joint_last - theta_joint_zone) ** 2)
-            r_joint_last = param_polynomial_zone[0] * ((theta_joint_last - theta_joint_zone) ** 1) + param_polynomial_zone[1] * ((theta_joint_last - theta_joint_zone) ** 2) + param_polynomial_zone[2] * ((theta_joint_last - theta_joint_zone) ** 3)
+            r_joint_last = 0
+            for j in range(k_polynomial_zone):
+                r_joint_last += param_polynomial_zone[j] * ((theta_joint_last - theta_joint_zone) ** (j + 1))
             xy_joint_last += np.asarray([r_joint_last * np.cos(theta_joint_last), r_joint_last * np.sin(theta_joint_last)])
             
             vector_joint_last += np.asarray([- r_joint_last * np.sin(theta_joint_last), r_joint_last * np.cos(theta_joint_last)])
-            # vector_joint_last += np.asarray([np.cos(theta_joint_last), np.sin(theta_joint_last)]) * (2 * param_polynomial_zone[0] * (theta_joint_last - theta_joint_zone) + 4 * param_polynomial_zone[1] * (theta_joint_last - theta_joint_zone) ** 3)
-            # vector_joint_last += np.asarray([np.cos(theta_joint_last), np.sin(theta_joint_last)]) * param_polynomial_zone[0]
-            # vector_joint_last += np.asarray([np.cos(theta_joint_last), np.sin(theta_joint_last)]) * (1 * param_polynomial_zone[0] + 2 * param_polynomial_zone[1] * (theta_joint_last - theta_joint_zone) ** 1)
-            vector_joint_last += np.asarray([np.cos(theta_joint_last), np.sin(theta_joint_last)]) * (1 * param_polynomial_zone[0] + 2 * param_polynomial_zone[1] * (theta_joint_last - theta_joint_zone) ** 1 + 3 * param_polynomial_zone[2] * (theta_joint_last - theta_joint_zone) ** 2)
+            for j in range(k_polynomial_zone):
+                vector_joint_last += np.asarray([np.cos(theta_joint_last), np.sin(theta_joint_last)]) * ((j + 1) * param_polynomial_zone[j] * (theta_joint_last - theta_joint_zone) ** j)
+            vector_joint_last = vector_joint_last / np.linalg.norm(vector_joint_last)
             '''polynomial zone'''
             
-            vector_joint_last = vector_joint_last / np.linalg.norm(vector_joint_last)
-            
             if i == self.num_seg - 1:
-                k_polynomial = 3
+                k_polynomial = k_polynomial_max - 1
             else:
                 k_polynomial = k_polynomial_max
             
@@ -400,20 +393,17 @@ class Ring():
             theta_joint_zone = theta_joints[0] - angle_zone
             if i == self.num_seg - 1:
                 theta_joint_zone += 2 * np.pi
-            # r_joint_next = param_polynomial_zone[0] * ((theta_joint_next - theta_joint_zone) ** 2) + param_polynomial_zone[1] * ((theta_joint_next - theta_joint_zone) ** 4)
-            # r_joint_next = param_polynomial_zone[0] * (theta_joint_next - theta_joint_zone)
-            # r_joint_next = param_polynomial_zone[0] * ((theta_joint_next - theta_joint_zone) ** 1) + param_polynomial_zone[1] * ((theta_joint_next - theta_joint_zone) ** 2)
-            r_joint_next = param_polynomial_zone[0] * ((theta_joint_next - theta_joint_zone) ** 1) + param_polynomial_zone[1] * ((theta_joint_next - theta_joint_zone) ** 2) + param_polynomial_zone[2] * ((theta_joint_next - theta_joint_zone) ** 3)
+                
+            r_joint_next = 0
+            for j in range(k_polynomial_zone):
+                r_joint_next = param_polynomial_zone[j] * ((theta_joint_next - theta_joint_zone) ** (j + 1))
             xy_joint_next += np.asarray([r_joint_next * np.cos(theta_joint_next), r_joint_next * np.sin(theta_joint_next)])
             
             vector_joint_next += np.asarray([- r_joint_next * np.sin(theta_joint_next), r_joint_next * np.cos(theta_joint_next)])
-            # vector_joint_next += np.asarray([np.cos(theta_joint_next), np.sin(theta_joint_next)]) * (2 * param_polynomial_zone[0] * (theta_joint_next - theta_joint_zone) + 4 * param_polynomial_zone[1] * (theta_joint_next - theta_joint_zone) ** 3)
-            # vector_joint_next += np.asarray([np.cos(theta_joint_next), np.sin(theta_joint_next)]) * param_polynomial_zone[0]
-            # vector_joint_next += np.asarray([np.cos(theta_joint_next), np.sin(theta_joint_next)]) * (1 * param_polynomial_zone[0] + 2 * param_polynomial_zone[1] * (theta_joint_next - theta_joint_zone) ** 1)
-            vector_joint_next += np.asarray([np.cos(theta_joint_next), np.sin(theta_joint_next)]) * (1 * param_polynomial_zone[0] + 2 * param_polynomial_zone[1] * (theta_joint_next - theta_joint_zone) ** 1 + 3 * param_polynomial_zone[2] * (theta_joint_next - theta_joint_zone) ** 2)
-            '''polynomial zone'''
-            
+            for j in range(k_polynomial_zone):
+                vector_joint_next += np.asarray([np.cos(theta_joint_next), np.sin(theta_joint_next)]) * ((j + 1) * param_polynomial_zone[j] * (theta_joint_next - theta_joint_zone) ** j)
             vector_joint_next = vector_joint_next / np.linalg.norm(vector_joint_next)
+            '''polynomial zone'''
             
             dislocation_all[i] = np.linalg.norm(xy_joint_last) - np.linalg.norm(xy_joint_next)
             
@@ -433,7 +423,7 @@ class Ring():
         for i in range(self.num_seg):
             
             if i == 0:
-                k_polynomial = 3
+                k_polynomial = k_polynomial_max - 1
             else:
                 k_polynomial = k_polynomial_max
             
@@ -459,16 +449,12 @@ class Ring():
                     
                 if theta_per < theta_joints[0] + angle_zone:
                     if not np.isnan(param_polynomial_zone[0, 0]):
-                        # r_per += param_polynomial_zone[0, 0] * (theta_per - (theta_joints[0] + angle_zone)) ** 2 + param_polynomial_zone[0, 1] * (theta_per - (theta_joints[0] + angle_zone)) ** 4
-                        # r_per += param_polynomial_zone[0, 0] * (theta_per - (theta_joints[0] + angle_zone))
-                        # r_per += param_polynomial_zone[0, 0] * (theta_per - (theta_joints[0] + angle_zone)) ** 1 + param_polynomial_zone[0, 1] * (theta_per - (theta_joints[0] + angle_zone)) ** 2
-                        r_per += param_polynomial_zone[0, 0] * (theta_per - (theta_joints[0] + angle_zone)) ** 1 + param_polynomial_zone[0, 1] * (theta_per - (theta_joints[0] + angle_zone)) ** 2 + param_polynomial_zone[0, 2] * (theta_per - (theta_joints[0] + angle_zone)) ** 3
+                        for j in range(k_polynomial_zone):
+                            r_per += param_polynomial_zone[0, j] * (theta_per - (theta_joints[0] + angle_zone)) ** (j + 1)
                 elif theta_per > theta_joints[1] - angle_zone:
                     if not np.isnan(param_polynomial_zone[1, 0]):
-                        # r_per += param_polynomial_zone[1, 0] * (theta_per - (theta_joints[1] - angle_zone)) ** 2 + param_polynomial_zone[1, 1] * (theta_per - (theta_joints[1] - angle_zone)) ** 4
-                        # r_per += param_polynomial_zone[1, 0] * (theta_per - (theta_joints[1] - angle_zone))
-                        # r_per += param_polynomial_zone[1, 0] * (theta_per - (theta_joints[1] - angle_zone)) ** 1 + param_polynomial_zone[1, 1] * (theta_per - (theta_joints[1] - angle_zone)) ** 2
-                        r_per += param_polynomial_zone[1, 0] * (theta_per - (theta_joints[1] - angle_zone)) ** 1 + param_polynomial_zone[1, 1] * (theta_per - (theta_joints[1] - angle_zone)) ** 2 + param_polynomial_zone[1, 2] * (theta_per - (theta_joints[1] - angle_zone)) ** 3
+                        for j in range(k_polynomial_zone):
+                            r_per += param_polynomial_zone[1, j] * (theta_per - (theta_joints[1] + angle_zone)) ** (j + 1)
                 
                 xy_per += np.asarray([r_per * np.cos(theta_per), r_per * np.sin(theta_per)])
                 xy_p_ellipse_polynomial_all.append([xy_per[0], xy_per[1], i + 1])
@@ -749,15 +735,11 @@ class Ring():
             delta_theta_mc_seg[index_flag] = - delta_theta_mc_seg[index_flag]
             
             boundary_l = np.interp(z_p_seg, [- length / 2, length / 2], [angles_b[i][1] + angle_joint_width, angles_f[i][1] + angle_joint_width])
-            # xy_l = np.hstack((np.cos(theta_mc_seg + boundary_l).reshape(-1, 1), np.sin(theta_mc_seg + boundary_l).reshape(-1, 1))) * r
             boundary_u = np.interp(z_p_seg, [- length / 2, length / 2], [angles_b[i][0] - angle_joint_width, angles_f[i][0] - angle_joint_width])
-            # xy_u = np.hstack((np.cos(theta_mc_seg + boundary_u).reshape(-1, 1), np.sin(theta_mc_seg + boundary_u).reshape(-1, 1))) * r
             
             index_out = np.where(delta_theta_mc_seg < boundary_l)[0]
-            # error[index_out] = np.linalg.norm(xy_l[index_out, :] - xy_p_seg[index_out, :], axis=1)
             error[index_out] = delta_theta_mc_seg[index_out] - boundary_l[index_out]
             index_out = np.where(delta_theta_mc_seg > boundary_u)[0]
-            # error[index_out] = np.linalg.norm(xy_p_seg[index_out, :] - xy_u[index_out, :], axis=1)
             error[index_out] = delta_theta_mc_seg[index_out] - boundary_u[index_out]
             
             error_all[index] = error[:]
