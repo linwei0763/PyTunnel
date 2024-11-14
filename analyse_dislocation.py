@@ -31,7 +31,7 @@ def customise_histogram(data, path_output):
     plt.xlim(-4, 4)
     plt.ylim(0, 0.2)
     
-    plt.xlabel('Error / mm')
+    plt.xlabel('Error (mm)')
     plt.ylabel('Frequency')
     
     weights = np.ones_like(data) / float(len(data))
