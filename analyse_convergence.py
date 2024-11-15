@@ -10,7 +10,7 @@ if __name__ == '__main__':
     path_o = 'result'
     stations = [0]
     r_all = [2.75]
-    angles = [202.5, 112.5, 180, 157.5, 135, 90, 45]
+    angles = [22.5, 112.5, 180, 157.5, 135, 90, 45]
     '''config'''
     
     convergence = []
