@@ -153,7 +153,7 @@ class Ring():
         k_polynomial_max = cfg_e_p['k_polynomial_max']
         k_polynomial_zone = k_polynomial_max - 1
         
-        polynomial_zone_seg_all = np.full((self.num_seg * 2, k_polynomial_zone), np.nan)
+        polynomial_zone_seg_all = np.full((self.num_seg * 2, k_polynomial_zone), 0.0)
         angle_zone = cfg_e_p['angle_zone'] / 180 * np.pi
         
         f_scale = cfg_e_p['f_scale']
@@ -224,7 +224,7 @@ class Ring():
                 param[0] = self.r
 
             if cfg_e_p['flag_polynomial']:
-                param_ls = optimize.least_squares(fit_polynomial_residual, param, xtol=None, gtol=None, loss='soft_l1', f_scale=f_scale, args=(k_polynomial, theta_seg_middle, residual, weight_l2))
+                param_ls = optimize.least_squares(fit_polynomial_residual, param, xtol=None, gtol=None, loss='soft_l1', f_scale=f_scale, args=(k_polynomial, theta_seg_middle, residual, weight_l2 * np.sqrt(10)))
                 param_ls = param_ls.x
                 param_polynomial = param_ls
             else:
@@ -276,7 +276,7 @@ class Ring():
                 d[index][index_zone] += polynomial_zone_seg_all[2 * i, j] * ((theta_seg[index_zone] - (theta_joints[0] + angle_zone)) ** (j + 1))
             index_zone = np.where(theta_seg > theta_joints[1] - angle_zone)[0]
             for j in range(k_polynomial_zone):
-                d[index][index_zone] += polynomial_zone_seg_all[2 * i + 1, j] * ((theta_seg[index_zone] - (theta_joints[1] + angle_zone)) ** (j + 1))
+                d[index][index_zone] += polynomial_zone_seg_all[2 * i + 1, j] * ((theta_seg[index_zone] - (theta_joints[1] - angle_zone)) ** (j + 1))
             
             error[index] = np.linalg.norm(xy_p_seg, axis=1) - d[index]
             d[index] = d[index] - self.r
@@ -366,7 +366,6 @@ class Ring():
             
             '''ellipse'''
             theta_joint_next = theta_joints[0] - self.angle_joint_width - theta_ellipse
-            
             if i == self.num_seg - 1:
                 theta_joint_next += 2 * np.pi
             
@@ -393,11 +392,16 @@ class Ring():
             theta_joint_zone = theta_joints[0] - angle_zone
             if i == self.num_seg - 1:
                 theta_joint_zone += 2 * np.pi
-                
             r_joint_next = 0
             for j in range(k_polynomial_zone):
-                r_joint_next = param_polynomial_zone[j] * ((theta_joint_next - theta_joint_zone) ** (j + 1))
+                r_joint_next += param_polynomial_zone[j] * ((theta_joint_next - theta_joint_zone) ** (j + 1))
             xy_joint_next += np.asarray([r_joint_next * np.cos(theta_joint_next), r_joint_next * np.sin(theta_joint_next)])
+            
+            theta_joint_zone = theta_joints[0] + angle_zone
+            r_joint_last = 0
+            for j in range(k_polynomial_zone):
+                r_joint_last += param_polynomial_zone[j] * ((theta_joint_last - theta_joint_zone) ** (j + 1))
+            xy_joint_last += np.asarray([r_joint_last * np.cos(theta_joint_last), r_joint_last * np.sin(theta_joint_last)])
             
             vector_joint_next += np.asarray([- r_joint_next * np.sin(theta_joint_next), r_joint_next * np.cos(theta_joint_next)])
             for j in range(k_polynomial_zone):
@@ -448,13 +452,11 @@ class Ring():
                     r_per += param_polynomial[j + 1] * (theta_per ** (j + 1))
                     
                 if theta_per < theta_joints[0] + angle_zone:
-                    if not np.isnan(param_polynomial_zone[0, 0]):
-                        for j in range(k_polynomial_zone):
-                            r_per += param_polynomial_zone[0, j] * (theta_per - (theta_joints[0] + angle_zone)) ** (j + 1)
+                    for j in range(k_polynomial_zone):
+                        r_per += param_polynomial_zone[0, j] * (theta_per - (theta_joints[0] + angle_zone)) ** (j + 1)
                 elif theta_per > theta_joints[1] - angle_zone:
-                    if not np.isnan(param_polynomial_zone[1, 0]):
-                        for j in range(k_polynomial_zone):
-                            r_per += param_polynomial_zone[1, j] * (theta_per - (theta_joints[1] + angle_zone)) ** (j + 1)
+                    for j in range(k_polynomial_zone):
+                        r_per += param_polynomial_zone[1, j] * (theta_per - (theta_joints[1] - angle_zone)) ** (j + 1)
                 
                 xy_per += np.asarray([r_per * np.cos(theta_per), r_per * np.sin(theta_per)])
                 xy_p_ellipse_polynomial_all.append([xy_per[0], xy_per[1], i + 1])

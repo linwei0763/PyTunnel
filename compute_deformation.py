@@ -18,7 +18,7 @@ if __name__ == '__main__':
     # flag_all = True
     flag_all = False
     if not flag_all:
-        part_stations = ['0-0', '0-12', '0-16', '0-19', '0-20', '0-25', '0-76', '0-81', '0-89', '0-96', '0-98', '0-101', '0-103', '1-9', '4-1', '4-2', '4-3', '4-4', '4-5', '4-6', '4-7', '4-8', '5-1', '5-2', '5-3', '5-4']
+        part_stations = ['0-0', '0-12', '0-16', '0-19', '0-20', '0-25', '0-76', '0-81', '0-89', '0-96', '0-98', '0-101', '0-103', '4-1', '4-2', '4-3', '4-4', '4-5', '4-6', '4-7', '4-8', '5-1', '5-2', '5-3', '5-4']
     
     # voxel_size = 0
     voxel_size = 0.04
@@ -146,27 +146,7 @@ if __name__ == '__main__':
             # pc = np.hstack((pc, d, error))
             '''seg_fourier'''
             
-            '''seg_ellipse_polynomial'''
-            # cfg_e_p = {}
-            # cfg_e_p['r_length'] = 4
-            # cfg_e_p['k_polynomial_max'] = 4
-            # cfg_e_p['angle_zone'] = 3
-            # cfg_e_p['flag_ellipse'] = True
-            # cfg_e_p['flag_polynomial'] = False
-            # cfg_e_p['flag_zone'] = False
-            # _, d, error, dislocation_all, rotation_all, xy_p_norm_all, xy_p_ellipse_polynomial_all, label_dislocation = ring.compute_d_seg_ellipse_polynomial(cfg_e_p)
-            # pc = np.hstack((pc, d, error))
-            
-            # cfg_e_p = {}
-            # cfg_e_p['r_length'] = 4
-            # cfg_e_p['k_polynomial_max'] = 4
-            # cfg_e_p['angle_zone'] = 3
-            # cfg_e_p['flag_ellipse'] = False
-            # cfg_e_p['flag_polynomial'] = True
-            # cfg_e_p['flag_zone'] = False
-            # _, d, error, dislocation_all, rotation_all, xy_p_norm_all, xy_p_ellipse_polynomial_all, label_dislocation = ring.compute_d_seg_ellipse_polynomial(cfg_e_p)
-            # pc = np.hstack((pc, d, error))
-            
+            '''seg_ellipse_polynomial'''            
             cfg_e_p = {}
             cfg_e_p['r_length'] = 4
             cfg_e_p['k_polynomial_max'] = 4
