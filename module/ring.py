@@ -484,6 +484,7 @@ class Ring():
         
         '''joint edge'''
         label_dislocation = np.zeros(self.num_point)
+        label_rotation = np.zeros(self.num_point)
         theta_seg_m = np.pi
         theta_p = np.arctan2(xyz_p[:, 1], xyz_p[:, 0])
         for i in range(self.num_seg):
@@ -491,17 +492,19 @@ class Ring():
             index_edge = np.where((theta_p > (theta_joint - angle_zone)) & (theta_p < (theta_joint + angle_zone)))[0]
             if not np.isnan(dislocation_all[i]):
                 label_dislocation[index_edge] = np.abs(dislocation_all[i])
+                label_rotation[index_edge] = np.abs(rotation_all[i])
             
             theta_seg_m += self.angles_m[i][1]
             if i == self.num_seg - 1:
                 theta_seg_m -= self.angles_m[0][0]
             else:
                 theta_seg_m -= self.angles_m[i + 1][0]
-        
+                
         label_dislocation = label_dislocation.reshape(-1, 1)
+        label_rotation = label_rotation.reshape(-1, 1)
         '''joint edge'''
         
-        return xyz_p, d, error, dislocation_all, rotation_all, xy_p_norm_all, xy_p_ellipse_polynomial_all, label_dislocation
+        return xyz_p, d, error, dislocation_all, rotation_all, xy_p_norm_all, xy_p_ellipse_polynomial_all, label_dislocation, label_rotation
     
     def compute_d_seg_fourier(self):
         

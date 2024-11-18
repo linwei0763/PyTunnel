@@ -156,8 +156,8 @@ if __name__ == '__main__':
             cfg_e_p['flag_ellipse'] = False
             cfg_e_p['flag_polynomial'] = True
             cfg_e_p['flag_zone'] = True
-            _, d, error, dislocation_all, rotation_all, xy_p_norm_all, xy_p_ellipse_polynomial_all, label_dislocation = ring.compute_d_seg_ellipse_polynomial(cfg_e_p)
-            pc = np.hstack((pc, d, error, label_dislocation))
+            _, d, error, dislocation_all, rotation_all, xy_p_norm_all, xy_p_ellipse_polynomial_all, label_dislocation, label_rotation = ring.compute_d_seg_ellipse_polynomial(cfg_e_p)
+            pc = np.hstack((pc, d, error, label_dislocation, label_rotation))
 
             dislocation_all_all.append([int(file.split('.')[0].split('-')[0]), int(file.split('.')[0].split('-')[1]), int(file.split('.')[0].split('-')[2])])
             rotation_all_all.append([int(file.split('.')[0].split('-')[0]), int(file.split('.')[0].split('-')[1]), int(file.split('.')[0].split('-')[2])])
