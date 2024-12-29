@@ -43,9 +43,12 @@ if __name__ == '__main__':
     
     '''------run------'''
     files = os.listdir(path_i)
+    distance = {}
     oa = {}
     miou = {}
     mean_confidence = {}
+    d_o_m = []
+    
     pc_all = []
     
     for file in files:
@@ -53,16 +56,21 @@ if __name__ == '__main__':
         pc = np.asarray(pc)
         if flag_joint:
             pc = pc[np.where(pc[:, index_joint] != 0)[0], :]
-            
-        pc_all.append(pc)
         
+        xy = pc[:, 0:2]
         labels = pc[:, index_label]
         predictions = pc[:, index_prediction]
         confidence = pc[:, index_confidence]
         
+        distance[file] = np.linalg.norm(np.mean(xy, axis=0))
         oa[file], miou[file] = calculate_metric(labels, predictions)
         mean_confidence[file] = np.mean(confidence)
+        d_o_m.append([distance[file], oa[file], miou[file]])
         
+        pc_all.append(pc)
+    
+    d_o_m = np.asarray(d_o_m)
+    
     pc_all = np.vstack(pc_all[:])
     labels = pc_all[:, index_label]
     predictions = pc_all[:, index_prediction]
