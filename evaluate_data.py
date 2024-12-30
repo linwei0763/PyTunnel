@@ -23,7 +23,7 @@ def calculate_metric(labels, preditions):
     total_seen = len(labels)
     oa = correct / total_seen
     
-    return oa, miou
+    return oa, miou, iou_list
 
 
 if __name__ == '__main__':
@@ -63,7 +63,7 @@ if __name__ == '__main__':
         confidence = pc[:, index_confidence]
         
         distance[file] = np.linalg.norm(np.mean(xy, axis=0))
-        oa[file], miou[file] = calculate_metric(labels, predictions)
+        oa[file], miou[file], _ = calculate_metric(labels, predictions)
         mean_confidence[file] = np.mean(confidence)
         d_o_m.append([distance[file], oa[file], miou[file]])
         
@@ -76,10 +76,11 @@ if __name__ == '__main__':
     predictions = pc_all[:, index_prediction]
     confidence = pc_all[:, index_confidence]
     
-    oa_all, miou_all = calculate_metric(labels, predictions)
+    oa_all, miou_all, iou_list_all = calculate_metric(labels, predictions)
     mean_confidence_all = np.mean(confidence)
     print(oa_all)
     print(miou_all)
+    print(iou_list_all)
     print(mean_confidence_all)
     print(np.percentile(confidence, 10))
     '''------run------'''
