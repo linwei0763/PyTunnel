@@ -73,7 +73,7 @@ if __name__ == '__main__':
     flag_trans_yz = [True, False, False, False, False, False]
     flag_v0_dir = [[0, 1, 0], None, None, None, None, None]
     
-    index_label = 5
+    index_label = 4
     '''------config------'''
     
     if not os.path.exists(path_o):
