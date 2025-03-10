@@ -51,7 +51,6 @@ class Ring():
             v = - v
             xy_o[0] = - xy_o[0]
             f_delta[0] = - f_delta[0]
-        
         if f_delta[0] < 0:
             f_delta = - f_delta
         

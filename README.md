@@ -13,7 +13,6 @@ cd seg2lining
 
 # feature seg2tunnel
 ```bash
-python compute_deformation.py
 python count_num_point.py
 python count_ring.py
 python label_crack.py
@@ -41,4 +40,5 @@ python analyse_convergence.py
 python analyse_dislocation.py
 python analyse_error.py
 python compute_deformation.py
+python compute_deviation.py
 ```
