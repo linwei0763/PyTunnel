@@ -2,6 +2,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import os
 import pandas as pd
+# import time
+
 
 from module.ring import Ring
 from module.utils import grid_sample
@@ -11,20 +13,20 @@ if __name__ == '__main__':
     
     '''------config------'''
     
-    # path_i = '../Seg2Tunnel/seg2tunnel'
-    path_i = 'data'
+    path_i = '../Seg2Tunnel/seg2tunnel'
+    # path_i = 'data'
     
     path_i_v = '../Seg2Tunnel/seg2tunnel'
     path_o = 'result'
     
-    # flag_all = True
-    flag_all = False
+    flag_all = True
+    # flag_all = False
     if not flag_all:
-        # part_stations = ['0-0', '0-12', '0-16', '0-19', '0-20', '0-25', '0-76', '0-81', '0-89', '0-96', '0-98', '0-101', '0-103', '4-1', '4-2', '4-3', '4-4', '4-5', '4-6', '4-7', '4-8', '5-1', '5-2', '5-3', '5-4']
-        part_stations = ['4-4']
+        part_stations = ['0-0', '0-12', '0-16', '0-19', '0-20', '0-25', '0-76', '0-81', '0-89', '0-96', '0-98', '0-101', '0-103', '4-1', '4-2', '4-3', '4-4', '4-5', '4-6', '4-7', '4-8', '5-1', '5-2', '5-3', '5-4']
+        # part_stations = ['4-1',]
     
-    voxel_size = 0
-    # voxel_size = 0.04
+    # voxel_size = 0
+    voxel_size = 0.04
     
     max_num = 40960
     
@@ -151,39 +153,67 @@ if __name__ == '__main__':
             '''seg_fourier'''
             
             '''seg_ellipse_polynomial'''            
-            # cfg_e_p = {}
-            # cfg_e_p['r_length'] = 4
-            # cfg_e_p['k_polynomial_max'] = 4
-            # cfg_e_p['angle_zone'] = 3
-            # cfg_e_p['f_scale'] = 0.001
-            # cfg_e_p['weight_l2'] = 0.001
-            # cfg_e_p['flag_ellipse'] = False
-            # cfg_e_p['flag_polynomial'] = True
-            # cfg_e_p['flag_zone'] = True
-            # _, d, error, dislocation_all, rotation_all, xy_p_norm_all, xy_p_ellipse_polynomial_all, label_dislocation, label_rotation = ring.compute_d_seg_ellipse_polynomial(cfg_e_p)
-            # pc = np.hstack((pc, d, error, label_dislocation, label_rotation))
+            cfg_e_p = {}
+            cfg_e_p['r_length'] = 4
+            cfg_e_p['k_polynomial_max'] = 4
+            cfg_e_p['angle_zone'] = 3
+            cfg_e_p['f_scale'] = 0.001
+            cfg_e_p['weight_l2'] = 0.001
+            cfg_e_p['flag_ellipse'] = True
+            cfg_e_p['flag_polynomial'] = False
+            cfg_e_p['flag_zone'] = False
+            _, d, error, dislocation_all, rotation_all, xy_p_norm_all, xy_p_ellipse_polynomial_all, label_dislocation, label_rotation = ring.compute_d_seg_ellipse_polynomial(cfg_e_p)
+            pc = np.hstack((pc, d, error))
+            
+            cfg_e_p = {}
+            cfg_e_p['r_length'] = 4
+            cfg_e_p['k_polynomial_max'] = 4
+            cfg_e_p['angle_zone'] = 3
+            cfg_e_p['f_scale'] = 0.001
+            cfg_e_p['weight_l2'] = 0.001
+            cfg_e_p['flag_ellipse'] = False
+            cfg_e_p['flag_polynomial'] = True
+            cfg_e_p['flag_zone'] = False
+            _, d, error, dislocation_all, rotation_all, xy_p_norm_all, xy_p_ellipse_polynomial_all, label_dislocation, label_rotation = ring.compute_d_seg_ellipse_polynomial(cfg_e_p)
+            pc = np.hstack((pc, d, error))
+            
+            # time_start=time.time()
+            cfg_e_p = {}
+            cfg_e_p['r_length'] = 4
+            cfg_e_p['k_polynomial_max'] = 4
+            cfg_e_p['angle_zone'] = 3
+            cfg_e_p['f_scale'] = 0.001
+            cfg_e_p['weight_l2'] = 0.001
+            cfg_e_p['flag_ellipse'] = False
+            cfg_e_p['flag_polynomial'] = True
+            cfg_e_p['flag_zone'] = True
+            _, d, error, dislocation_all, rotation_all, xy_p_norm_all, xy_p_ellipse_polynomial_all, label_dislocation, label_rotation = ring.compute_d_seg_ellipse_polynomial(cfg_e_p)
+            pc = np.hstack((pc, d, error, label_dislocation, label_rotation))
+            # time_end=time.time()
+            # print('there are', pc.shape[0], ' points')
+            # print('it cost ', time_end-time_start, ' s')
 
-            # dislocation_all_all.append([int(file.split('.')[0].split('-')[0]), int(file.split('.')[0].split('-')[1]), int(file.split('.')[0].split('-')[2])])
-            # rotation_all_all.append([int(file.split('.')[0].split('-')[0]), int(file.split('.')[0].split('-')[1]), int(file.split('.')[0].split('-')[2])])
-            # for i in range(num_seg_all[tunnel_no]):
-            #     dislocation_all_all[-1].append(dislocation_all[i])
-            #     rotation_all_all[-1].append(rotation_all[i])
-            # print(dislocation_all_all[-1])
-            # print(rotation_all_all[-1])
+            dislocation_all_all.append([int(file.split('.')[0].split('-')[0]), int(file.split('.')[0].split('-')[1]), int(file.split('.')[0].split('-')[2])])
+            rotation_all_all.append([int(file.split('.')[0].split('-')[0]), int(file.split('.')[0].split('-')[1]), int(file.split('.')[0].split('-')[2])])
+            for i in range(num_seg_all[tunnel_no]):
+                dislocation_all_all[-1].append(dislocation_all[i])
+                rotation_all_all[-1].append(rotation_all[i])
+            print(dislocation_all_all[-1])
+            print(rotation_all_all[-1])
             
-            # plt.figure(figsize=(20, 20))
-            # plt.scatter(xy_p_norm_all[:, 3], xy_p_norm_all[:, 4], s=1, c=xy_p_norm_all[:, 5], marker='.', cmap='viridis')
-            # plt.scatter(xy_p_ellipse_polynomial_all[:, 3], xy_p_ellipse_polynomial_all[:, 4], s=1, c=xy_p_ellipse_polynomial_all[:, 5], marker='.', cmap='plasma')
-            # plt.gca().set_aspect(1)
-            # plt.xlim((-4, 4))
-            # plt.ylim((-4, 4))
-            # plt.savefig(os.path.join(path_o, file.split('.')[0] + '.png'), dpi=600)
-            # plt.close()
+            plt.figure(figsize=(20, 20))
+            plt.scatter(xy_p_norm_all[:, 3], xy_p_norm_all[:, 4], s=1, c=xy_p_norm_all[:, 5], marker='.', cmap='viridis')
+            plt.scatter(xy_p_ellipse_polynomial_all[:, 3], xy_p_ellipse_polynomial_all[:, 4], s=1, c=xy_p_ellipse_polynomial_all[:, 5], marker='.', cmap='plasma')
+            plt.gca().set_aspect(1)
+            plt.xlim((-4, 4))
+            plt.ylim((-4, 4))
+            plt.savefig(os.path.join(path_o, file.split('.')[0] + '.png'), dpi=600)
+            plt.close()
             
-            # xy_p_norm_all = pd.DataFrame(xy_p_norm_all)
-            # xy_p_norm_all.to_excel(os.path.join(path_o, file.split('.')[0] + '-norm.xlsx'), header=False, index=False)
-            # xy_p_ellipse_polynomial_all = pd.DataFrame(xy_p_ellipse_polynomial_all)
-            # xy_p_ellipse_polynomial_all.to_excel(os.path.join(path_o, file.split('.')[0] + '-ellipse-polynomial.xlsx'), header=False, index=False)
+            xy_p_norm_all = pd.DataFrame(xy_p_norm_all)
+            xy_p_norm_all.to_excel(os.path.join(path_o, file.split('.')[0] + '-norm.xlsx'), header=False, index=False)
+            xy_p_ellipse_polynomial_all = pd.DataFrame(xy_p_ellipse_polynomial_all)
+            xy_p_ellipse_polynomial_all.to_excel(os.path.join(path_o, file.split('.')[0] + '-ellipse-polynomial.xlsx'), header=False, index=False)
             '''seg_ellipse_polynomial'''
             
             '''save pc'''
