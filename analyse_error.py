@@ -63,8 +63,7 @@ if __name__ == '__main__':
     index_d0 = -13
     index_joint = -1
     
-    # name_tunnel = [[0], [1, 2], [3], [4, 5]]
-    name_tunnel = [[0],]
+    name_tunnel = [[0], [1, 2], [3], [4, 5]]
     '''---config---'''
     
     '''all'''
