@@ -13,7 +13,7 @@ cd seg2lining
 
 # feature seg2tunnel
 ```bash
-python count_num_point.py
+python count_point.py
 python count_ring.py
 python label_crack.py
 python generate_synthetic_data.py --dataset=dublin
